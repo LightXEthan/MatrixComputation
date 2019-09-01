@@ -5,6 +5,33 @@
 
 #define SIZE 100
 
+// Coordinate formats
+typedef struct {
+  int i;
+  int j;
+  int val;
+} COO;
+
+COO *coordinate;
+int nCOO;
+
+typedef struct {
+  int *elements;
+  int len;
+} CSR;
+
+typedef struct {
+  int *elements;
+  int len;
+} CSC;
+
+// Add to COO format
+void addElementCOO(char *value, int pointer) {
+  int num = atoi(value);
+  printf("num found %d, %d\n", num, pointer);
+  return;
+}
+
 int getDataType(char *data) {
   const char *str1 = "int";
   const char *str2 = "float";
@@ -16,6 +43,8 @@ int getDataType(char *data) {
   }
   return -1;
 }
+
+
 
 int main(int argc, char *argv[]) {
 
@@ -48,6 +77,7 @@ int main(int argc, char *argv[]) {
     }
   }
   
+  // File data
   FILE *file = fopen(filename, "r");
   char buf[SIZE];
   char databuf[7];
@@ -56,6 +86,9 @@ int main(int argc, char *argv[]) {
   int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
   int nrows;
   int ncols;
+
+  // Matrix Formats
+
 
   // Gets the datatype from the file
   char *data = fgets(databuf, 7, file);
@@ -71,10 +104,21 @@ int main(int argc, char *argv[]) {
 
   printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
 
-  
+  const char s[2] = " ";
+  char *token;
+  char *zero = "0";
 
-  while (fgets(buf, SIZE, file)) {
-    printf("%s\n", buf);
+  fgets(buf, SIZE, file);
+  token = strtok(buf, s);
+  int pointer = 0;
+
+  while ( token != NULL) {
+    if (*token != *zero) {
+      addElementCOO(token, pointer);
+    }
+    pointer++;
+    printf("Zero detected\n");
+    token = strtok(NULL, s);
   }
 
   /*
