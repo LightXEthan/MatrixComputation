@@ -3,10 +3,23 @@
 #include <unistd.h>
 #include <omp.h>
 
+#define SIZE 100
+
+int getDataType(char *data) {
+  const char *str1 = "int";
+  const char *str2 = "float";
+  if (strncmp(data, str1, 3) == 0) {
+    return 1;
+  }
+  if (strncmp(data, str2, 5) == 0) {
+    return 0;
+  }
+  return -1;
+}
+
 int main(int argc, char *argv[]) {
 
   char *filename = NULL;
-  int opt;
   enum operations{Scalar, Trace, Addition, Transpose, Multiply};
   enum operations op_flag;
 
@@ -36,9 +49,31 @@ int main(int argc, char *argv[]) {
   }
   
   FILE *file = fopen(filename, "r");
-  char buf[100];
+  char buf[SIZE];
+  char databuf[7];
 
-  while (fgets(buf, 100, file)) {
+  // File information
+  int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
+  int nrows;
+  int ncols;
+
+  // Gets the datatype from the file
+  char *data = fgets(databuf, 7, file);
+  printf("%s\n", data);
+
+  datatype = getDataType(data);
+  if (datatype == 0) printf("Datatype: int\n");
+  if (datatype == 1) printf("Datatype: float\n");
+  if (datatype == -1) printf("Error: invalid datatype\n");
+
+  nrows = atoi(fgets(buf, SIZE, file));
+  ncols = atoi(fgets(buf, SIZE, file));
+
+  printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
+
+  
+
+  while (fgets(buf, SIZE, file)) {
     printf("%s\n", buf);
   }
 
