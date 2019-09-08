@@ -6,14 +6,10 @@
 #define SIZE 100
 
 // Coordinate formats
-typedef struct {
-  int i;
-  int j;
-  int val;
-} COO;
-
-COO *coordinate;
-int nCOO;
+int *coo_i;
+int *coo_j;
+int *coo_val;
+int ncoo = 0;
 
 typedef struct {
   int *elements;
@@ -25,10 +21,33 @@ typedef struct {
   int len;
 } CSC;
 
-// Add to COO format
+int nrows;
+int ncols;
+
+void memError() {
+  perror("Problem with memory allocation. Exiting\n");
+  exit(EXIT_FAILURE);
+}
+
+// Add to COO format, arguments value, number, (row, col, value)
 void addElementCOO(char *value, int pointer) {
   int num = atoi(value);
-  printf("num found %d, %d\n", num, pointer);
+
+  coo_i = realloc(coo_i, (ncoo + 1) * sizeof(int));
+  if (coo_i == NULL) memError();
+  coo_i[ncoo] = pointer / nrows;
+
+  coo_j = realloc(coo_j, (ncoo + 1) * sizeof(int));
+  if (coo_j == NULL) memError();
+  coo_j[ncoo] = pointer % ncols;
+
+  coo_val = realloc(coo_val, (ncoo + 1) * sizeof(int));
+  if (coo_val == NULL) memError();
+  coo_val[ncoo] = num;
+  
+  printf("Info: (%d, %d, %d) %d\n", coo_i[ncoo], coo_j[ncoo], coo_val[ncoo], sizeof(coo_i));
+  ncoo++;
+  
   return;
 }
 
@@ -84,19 +103,13 @@ int main(int argc, char *argv[]) {
 
   // File information
   int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
-  int nrows;
-  int ncols;
-
-  // Matrix Formats
-
 
   // Gets the datatype from the file
   char *data = fgets(databuf, 7, file);
-  printf("%s\n", data);
 
   datatype = getDataType(data);
-  if (datatype == 0) printf("Datatype: int\n");
-  if (datatype == 1) printf("Datatype: float\n");
+  if (datatype == 1) printf("Datatype: int\n");
+  if (datatype == 0) printf("Datatype: float\n");
   if (datatype == -1) printf("Error: invalid datatype\n");
 
   nrows = atoi(fgets(buf, SIZE, file));
@@ -105,7 +118,7 @@ int main(int argc, char *argv[]) {
   printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
 
   const char s[2] = " ";
-  char *token;
+  char *token; // Value
   char *zero = "0";
 
   fgets(buf, SIZE, file);
@@ -117,7 +130,6 @@ int main(int argc, char *argv[]) {
       addElementCOO(token, pointer);
     }
     pointer++;
-    printf("Zero detected\n");
     token = strtok(NULL, s);
   }
 
