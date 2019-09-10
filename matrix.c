@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <omp.h>
+#include <time.h>
 
 #define SIZE 12
 
@@ -126,9 +127,10 @@ int main(int argc, char *argv[]) {
   FILE *file = fopen(filename, "r");
   char buf[SIZE];
   char databuf[7];
-
-  // File information
   int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
+
+  // Time starts to convert matrix files
+  clock_t time = clock();
 
   // Gets the datatype from the file
   char *data = fgets(databuf, 7, file);
