@@ -5,23 +5,28 @@
 #include <omp.h>
 #include <time.h>
 
-#define SIZE 12
+#define SIZE 14
 
 extern void memError();
-extern void addElement(char *, int);
+extern void addElement(char *, int, int);
 extern int getDataType(char *);
 extern void addCSR();
 
 // Coordinate formats
 int *coo_i;
 int *array_j;
-int *array_val;
 int ncoo = 0;
+
+int *array_val_int;
+float *array_val_float;
 
 // CSR
 int *csr_rows;
 int ncsr = 0;
 int csr_counter = 0;
+
+// Matrix Routine flag
+int flag = 0;
 
 typedef struct {
   int *elements;
@@ -37,7 +42,7 @@ void memError() {
 }
 
 // Add to COO format, arguments value, number, (row, col, value)
-void addElement(char *value, int pointer) {
+void addElement(char *value, int pointer, int datatype) {
   int num = atoi(value);
   // TODO: Have 4 threads realloc these
   coo_i = realloc(coo_i, (ncoo + 1) * sizeof(int));
@@ -48,10 +53,17 @@ void addElement(char *value, int pointer) {
   if (array_j == NULL) memError();
   array_j[ncoo] = pointer % ncols;
 
-  array_val = realloc(array_val, (ncoo + 1) * sizeof(int));
-  if (array_val == NULL) memError();
-  array_val[ncoo] = num;
-
+  if (datatype == 0) {
+    array_val_int = realloc(array_val_int, (ncoo + 1) * sizeof(int));
+    if (array_val_int == NULL) memError();
+    array_val_int[ncoo] = num;
+  }
+  else {
+    array_val_float = realloc(array_val_float, (ncoo + 1) * sizeof(float));
+    if (array_val_float == NULL) memError();
+    array_val_float[ncoo] = num;
+  }
+  
   // Adds to csr array if the coo_i value changes
   if (ncoo > 0 && coo_i[ncoo] != coo_i[ncoo - 1]) {
     addCSR();
@@ -67,10 +79,10 @@ int getDataType(char *data) {
   const char *str1 = "int";
   const char *str2 = "float";
   if (strncmp(data, str1, 3) == 0) {
-    return 1;
+    return 0;
   }
   if (strncmp(data, str2, 5) == 0) {
-    return 0;
+    return 1;
   }
   return -1;
 }
@@ -93,11 +105,33 @@ void addCSR() {
   return;
 }
 
+void scalarMultiplication(int scalari, float scalarf, int datatype) {
+  // TODO: parallise
+  if (datatype == 0) {
+    for (int i = 0; i < ncoo; i++)
+    {
+      array_val_int[i] *= scalari;
+      printf("Value: %d\n", array_val_int[i]);
+    }
+  }
+  else {
+    for (int i = 0; i < ncoo; i++)
+    {
+      array_val_float[i] *= scalarf;
+      printf("Value: %d\n", array_val_float[i]);
+    }
+  }
+  return;
+}
+
 int main(int argc, char *argv[]) {
 
   char *filename = NULL;
   enum operations{Scalar, Trace, Addition, Transpose, Multiply};
   enum operations op_flag;
+
+  int scalari;
+  int scalarf;
 
   for (int i = 0; i < argc; i++)
   {
@@ -107,6 +141,10 @@ int main(int argc, char *argv[]) {
         filename = argv[++i];
       case '-':
         if (argv[i][2] == 's' && argv[i][3] == 'c') {
+          // Scalar Multiplication
+          flag = 1;
+          scalari = atoi(argv[++i]);
+          scalarf = atof(argv[i]);
           printf("Scalar detected\n");
         }
         if (argv[i][2] == 't' && argv[i][3] == 'r') {
@@ -128,18 +166,21 @@ int main(int argc, char *argv[]) {
   FILE *file = fopen(filename, "r");
   char buf[SIZE];
   char databuf[7];
-  int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
 
   // Time starts to convert matrix files
   clock_t start = clock();
 
   // Gets the datatype from the file
   char *data = fgets(databuf, 7, file);
+  int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
 
   datatype = getDataType(data);
-  if (datatype == 1) printf("Datatype: int\n");
-  if (datatype == 0) printf("Datatype: float\n");
-  if (datatype == -1) printf("Error: invalid datatype\n");
+  if (datatype == 0) printf("Datatype: int\n");
+  if (datatype == 1) printf("Datatype: float\n");
+  if (datatype == -1) {
+    printf("Error: invalid datatype\n");
+    exit(EXIT_FAILURE);
+  }
 
   nrows = atoi(fgets(buf, SIZE, file));
   ncols = atoi(fgets(buf, SIZE, file));
@@ -152,14 +193,14 @@ int main(int argc, char *argv[]) {
 
   csr_rows = calloc(++ncsr, sizeof(int));
   csr_rows[0] = 0;
+  int pointer = 0;
 
   while (fgets(buf, SIZE, file) != NULL) {
     token = strtok(buf, s);
-    int pointer = 0;
 
     while ( token != NULL) {
       if (*token != *zero) {
-        addElement(token, pointer);
+        addElement(token, pointer, datatype);
       }
       pointer++;
       token = strtok(NULL, s);
@@ -176,9 +217,23 @@ int main(int argc, char *argv[]) {
 
   for (int i = 0; i < ncoo; i++)
   {
-    //printf("COO: (%d, %d, %d)\n", coo_i[i], array_j[i], array_val[i]);
-    printf("CSR: (%d, %d, %d)\n", array_val[i], csr_rows[i+1], array_j[i]);
+    //printf("COO: (%d, %d, %f)\n", coo_i[i], array_j[i], array_val_float[i]);
+    printf("CSR: (%d, %d, %d)\n", array_val_int[i], csr_rows[i+1], array_j[i]);
   }
+
+  // Scalar multiplication
+  printf("F: %f\n", scalarf);
+  if (flag == 1) {
+    scalarMultiplication(scalari, scalarf, datatype);
+  }
+
+  fclose(file);
+  free(coo_i);
+  free(array_j);
+
+  free(array_val_int);
+  free(array_val_float);
+  free(csr_rows);
 
 
   /*
