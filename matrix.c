@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <omp.h>
 #include <time.h>
 
@@ -130,7 +131,7 @@ int main(int argc, char *argv[]) {
   int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
 
   // Time starts to convert matrix files
-  clock_t time = clock();
+  clock_t start = clock();
 
   // Gets the datatype from the file
   char *data = fgets(databuf, 7, file);
@@ -168,6 +169,10 @@ int main(int argc, char *argv[]) {
   // Adds the final value(s) of CSR
   addCSR();
   
+  // Gets end file process execution
+  clock_t end = clock();
+  double total = (double) (end - start) / CLOCKS_PER_SEC;
+  printf("Time for file processing: %f\n", total);
 
   for (int i = 0; i < ncoo; i++)
   {

@@ -1,5 +1,6 @@
 # Build
 matrix
+matrix.exe.stackdump
 
 # Prerequisites
 *.d
