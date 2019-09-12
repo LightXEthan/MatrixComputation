@@ -120,24 +120,41 @@ void scalarMultiplication(int scalari, float scalarf, int datatype) {
   return;
 }
 
-int trace(int datatype) {
-  int n = 1;
-  int results[n]; // n number of threads
-  // TODO: parallelise
+int trace(int datatype, int nthreads, int parallel) {
+
   int total = 0;
-  int id = 0; // thread id
-  for (int i = 0; i < nelements; i++)
-  {
-    if (coo_i[i] == array_j[i]) {
-      printf("Yes %d!\n", array_val_int[i]);
-      total += array_val_int[i];
+  
+  // Non parallelised 
+  if (parallel == 0) {
+    for (int i = 0; i < nelements; i++)
+    {
+      if (coo_i[i] == array_j[i]) {
+        total += array_val_int[i];
+      }
     }
   }
-  results[id] = total;
-  
-  for (int i = 1; i < n; i++)
-  {
-    total += results[i];
+
+  // Parallelised 
+  if (parallel == 1) {
+    int results[nthreads]; // n number of threads
+
+    #pragma omp parallel num_threads(nthreads) 
+    {
+      int id = omp_get_thread_num(); // thread id
+      #pragma omp for
+      for (int i = 0; i < nelements; i++)
+      {
+        if (coo_i[i] == array_j[i]) {
+          total += array_val_int[i];
+        }
+      }
+      results[id] = total;
+    }
+
+    for (int i = 1; i < nthreads; i++)
+    {
+      total += results[i];
+    }
   }
 
   return total;
@@ -149,6 +166,10 @@ int main(int argc, char *argv[]) {
   enum operations{Scalar, Trace, Addition, Transpose, Multiply};
   enum operations op;
 
+  int nthreads = 8;
+  int parallel = 0;
+  printf("===== Log Start =====\nNumber of threads: %d\n", nthreads);
+
   // Time start_ps to convert matrix files
   clock_t start_p = clock();
 
@@ -159,31 +180,31 @@ int main(int argc, char *argv[]) {
   {
     switch (argv[i][1]) {
       case 'f':
-        printf("File detected\n");
         filename = argv[++i];
+        printf("File: %s\n", filename);
       case '-':
         if (argv[i][2] == 's' && argv[i][3] == 'c') {
           // Scalar Multiplication
           op = Scalar;
           scalari = atoi(argv[++i]);
           scalarf = atof(argv[i]);
-          printf("Scalar detected\n");
+          printf("Scalar operation.\n");
         }
         if (argv[i][2] == 't' && argv[i][3] == 'r') {
           op = Trace;
-          printf("Trace detected\n");
+          printf("Trace operation.\n");
         }
         if (argv[i][2] == 'a' && argv[i][3] == 'd') {
           op = Addition;
-          printf("Addition detected\n");
+          printf("Addition operation.\n");
         }
         if (argv[i][2] == 't' && argv[i][3] == 's') {
           op = Transpose;
-          printf("Transpose detected\n");
+          printf("Transpose operation.\n");
         }
         if (argv[i][2] == 'm' && argv[i][3] == 'm') {
           op = Multiply;
-          printf("Mulitplication detected\n");
+          printf("Mulitplication operation.\n");
         }
     }
   }
@@ -237,22 +258,23 @@ int main(int argc, char *argv[]) {
   double total_p = (double) (end_p - start_p) / CLOCKS_PER_SEC;
   printf("Time for file processing: %f\n", total_p);
 
+  // Debugging purposes
   for (int i = 0; i < nelements; i++)
   {
-    printf("COO: (%d, %d, %d)\n", coo_i[i], array_j[i], array_val_int[i]);
-    printf("CSR: (%d, %d, %d)\n", array_val_int[i], csr_rows[i+1], array_j[i]);
+    //printf("COO: (%d, %d, %d)\n", coo_i[i], array_j[i], array_val_int[i]);
+    //printf("CSR: (%d, %d, %d)\n", array_val_int[i], csr_rows[i+1], array_j[i]);
   }
 
   // Times the operation time
   clock_t start_o = clock();
 
   // Scalar multiplication
-  printf("F: %f\n", scalarf);
   if (op == Scalar) {
     scalarMultiplication(scalari, scalarf, datatype);
   }
   if (op == Trace) {
-    int trace_sum = trace(datatype);
+    int trace_sum = trace(datatype, nthreads, parallel);
+    printf("Result of Trace sum: %d\n", trace_sum);
   }
   
 
@@ -267,6 +289,7 @@ int main(int argc, char *argv[]) {
   free(array_val_int);
   free(array_val_float);
   free(csr_rows);
+  printf("====== Log end ======\n");
 
 
   /*
