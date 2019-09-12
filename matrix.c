@@ -91,7 +91,7 @@ void addCSR() {
   int dif = 0;
   //printf("Info: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[ncoo - 1]: %d!\n",csr_counter, ncsr, coo_i[ncoo], coo_i[ncoo - 1]);
   if (ncsr > 0) {
-    // Calculates number of elements total - previous calculation
+    // Calculates number of elements total_p - previous calculation
     dif = csr_counter - csr_rows[ncsr - 1];
   }
 
@@ -167,8 +167,8 @@ int main(int argc, char *argv[]) {
   char buf[SIZE];
   char databuf[7];
 
-  // Time starts to convert matrix files
-  clock_t start = clock();
+  // Time start_ps to convert matrix files
+  clock_t start_p = clock();
 
   // Gets the datatype from the file
   char *data = fgets(databuf, 7, file);
@@ -210,10 +210,10 @@ int main(int argc, char *argv[]) {
   // Adds the final value(s) of CSR
   addCSR();
   
-  // Gets end file process execution
-  clock_t end = clock();
-  double total = (double) (end - start) / CLOCKS_PER_SEC;
-  printf("Time for file processing: %f\n", total);
+  // Gets end_p file process execution
+  clock_t end_p = clock();
+  double total_p = (double) (end_p - start_p) / CLOCKS_PER_SEC;
+  printf("Time for file processing: %f\n", total_p);
 
   for (int i = 0; i < ncoo; i++)
   {
@@ -221,11 +221,18 @@ int main(int argc, char *argv[]) {
     printf("CSR: (%d, %d, %d)\n", array_val_int[i], csr_rows[i+1], array_j[i]);
   }
 
+  // Times the operation time
+  clock_t start_o = clock();
+
   // Scalar multiplication
   printf("F: %f\n", scalarf);
   if (flag == 1) {
     scalarMultiplication(scalari, scalarf, datatype);
   }
+
+  clock_t end_o = clock();
+  double total_o = (double) (end_p - start_p) / CLOCKS_PER_SEC;
+  printf("Time for matrix operation: %f\n", total_o);
 
   fclose(file);
   free(coo_i);
