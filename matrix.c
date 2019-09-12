@@ -15,7 +15,7 @@ extern void addCSR();
 // Coordinate formats
 int *coo_i;
 int *array_j;
-int ncoo = 0;
+int nelements = 0;
 
 int *array_val_int;
 float *array_val_float;
@@ -24,9 +24,6 @@ float *array_val_float;
 int *csr_rows;
 int ncsr = 0;
 int csr_counter = 0;
-
-// Matrix Routine flag
-int flag = 0;
 
 typedef struct {
   int *elements;
@@ -45,39 +42,38 @@ void memError() {
 void addElement(char *value, int pointer, int datatype) {
   int num = atoi(value);
   // TODO: Have 4 threads realloc these
-  coo_i = realloc(coo_i, (ncoo + 1) * sizeof(int));
+  coo_i = realloc(coo_i, (nelements + 1) * sizeof(int));
   if (coo_i == NULL) memError();
-  coo_i[ncoo] = pointer / nrows;
+  coo_i[nelements] = pointer / nrows;
 
-  array_j = realloc(array_j, (ncoo + 1) * sizeof(int));
+  array_j = realloc(array_j, (nelements + 1) * sizeof(int));
   if (array_j == NULL) memError();
-  array_j[ncoo] = pointer % ncols;
+  array_j[nelements] = pointer % ncols;
 
   if (datatype == 0) {
-    array_val_int = realloc(array_val_int, (ncoo + 1) * sizeof(int));
+    array_val_int = realloc(array_val_int, (nelements + 1) * sizeof(int));
     if (array_val_int == NULL) memError();
-    array_val_int[ncoo] = num;
+    array_val_int[nelements] = num;
   }
   else {
-    array_val_float = realloc(array_val_float, (ncoo + 1) * sizeof(float));
+    array_val_float = realloc(array_val_float, (nelements + 1) * sizeof(float));
     if (array_val_float == NULL) memError();
-    array_val_float[ncoo] = num;
+    array_val_float[nelements] = num;
   }
   
   // Adds to csr array if the coo_i value changes
-  if (ncoo > 0 && coo_i[ncoo] != coo_i[ncoo - 1]) {
+  if (nelements > 0 && coo_i[nelements] != coo_i[nelements - 1]) {
     addCSR();
   }
   csr_counter++;
-  
-  ncoo++;
-  
+
+  nelements++;
   return;
 }
 
 int getDataType(char *data) {
-  const char *str1 = "int";
-  const char *str2 = "float";
+  const char str1[4] = "int";
+  const char str2[6] = "float";
   if (strncmp(data, str1, 3) == 0) {
     return 0;
   }
@@ -89,7 +85,7 @@ int getDataType(char *data) {
 
 void addCSR() {
   int dif = 0;
-  //printf("Info: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[ncoo - 1]: %d!\n",csr_counter, ncsr, coo_i[ncoo], coo_i[ncoo - 1]);
+  //printf("Info: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[nelements - 1]: %d!\n",csr_counter, ncsr, coo_i[nelements], coo_i[nelements - 1]);
   if (ncsr > 0) {
     // Calculates number of elements total_p - previous calculation
     dif = csr_counter - csr_rows[ncsr - 1];
@@ -108,30 +104,56 @@ void addCSR() {
 void scalarMultiplication(int scalari, float scalarf, int datatype) {
   // TODO: parallise
   if (datatype == 0) {
-    for (int i = 0; i < ncoo; i++)
+    for (int i = 0; i < nelements; i++)
     {
       array_val_int[i] *= scalari;
       printf("Value: %d\n", array_val_int[i]);
     }
   }
   else {
-    for (int i = 0; i < ncoo; i++)
+    for (int i = 0; i < nelements; i++)
     {
       array_val_float[i] *= scalarf;
-      printf("Value: %d\n", array_val_float[i]);
+      printf("Value: %f\n", array_val_float[i]);
     }
   }
   return;
+}
+
+int trace(int datatype) {
+  int n = 1;
+  int results[n]; // n number of threads
+  // TODO: parallelise
+  int total = 0;
+  int id = 0; // thread id
+  for (int i = 0; i < nelements; i++)
+  {
+    if (coo_i[i] == array_j[i]) {
+      printf("Yes %d!\n", array_val_int[i]);
+      total += array_val_int[i];
+    }
+  }
+  results[id] = total;
+  
+  for (int i = 1; i < n; i++)
+  {
+    total += results[i];
+  }
+
+  return total;
 }
 
 int main(int argc, char *argv[]) {
 
   char *filename = NULL;
   enum operations{Scalar, Trace, Addition, Transpose, Multiply};
-  enum operations op_flag;
+  enum operations op;
+
+  // Time start_ps to convert matrix files
+  clock_t start_p = clock();
 
   int scalari;
-  int scalarf;
+  float scalarf;
 
   for (int i = 0; i < argc; i++)
   {
@@ -142,38 +164,38 @@ int main(int argc, char *argv[]) {
       case '-':
         if (argv[i][2] == 's' && argv[i][3] == 'c') {
           // Scalar Multiplication
-          flag = 1;
+          op = Scalar;
           scalari = atoi(argv[++i]);
           scalarf = atof(argv[i]);
           printf("Scalar detected\n");
         }
         if (argv[i][2] == 't' && argv[i][3] == 'r') {
+          op = Trace;
           printf("Trace detected\n");
         }
         if (argv[i][2] == 'a' && argv[i][3] == 'd') {
+          op = Addition;
           printf("Addition detected\n");
         }
         if (argv[i][2] == 't' && argv[i][3] == 's') {
+          op = Transpose;
           printf("Transpose detected\n");
         }
         if (argv[i][2] == 'm' && argv[i][3] == 'm') {
+          op = Multiply;
           printf("Mulitplication detected\n");
         }
     }
   }
-  
+
   // File data
   FILE *file = fopen(filename, "r");
   char buf[SIZE];
   char databuf[7];
-
-  // Time start_ps to convert matrix files
-  clock_t start_p = clock();
+  int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
 
   // Gets the datatype from the file
   char *data = fgets(databuf, 7, file);
-  int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
-
   datatype = getDataType(data);
   if (datatype == 0) printf("Datatype: int\n");
   if (datatype == 1) printf("Datatype: float\n");
@@ -215,9 +237,9 @@ int main(int argc, char *argv[]) {
   double total_p = (double) (end_p - start_p) / CLOCKS_PER_SEC;
   printf("Time for file processing: %f\n", total_p);
 
-  for (int i = 0; i < ncoo; i++)
+  for (int i = 0; i < nelements; i++)
   {
-    //printf("COO: (%d, %d, %f)\n", coo_i[i], array_j[i], array_val_float[i]);
+    printf("COO: (%d, %d, %d)\n", coo_i[i], array_j[i], array_val_int[i]);
     printf("CSR: (%d, %d, %d)\n", array_val_int[i], csr_rows[i+1], array_j[i]);
   }
 
@@ -226,12 +248,16 @@ int main(int argc, char *argv[]) {
 
   // Scalar multiplication
   printf("F: %f\n", scalarf);
-  if (flag == 1) {
+  if (op == Scalar) {
     scalarMultiplication(scalari, scalarf, datatype);
   }
+  if (op == Trace) {
+    int trace_sum = trace(datatype);
+  }
+  
 
   clock_t end_o = clock();
-  double total_o = (double) (end_p - start_p) / CLOCKS_PER_SEC;
+  double total_o = (double) (end_o - start_o) / CLOCKS_PER_SEC;
   printf("Time for matrix operation: %f\n", total_o);
 
   fclose(file);
