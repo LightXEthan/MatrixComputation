@@ -101,22 +101,38 @@ void addCSR() {
   return;
 }
 
-void scalarMultiplication(int scalari, float scalarf, int datatype) {
-  // TODO: parallise
-  if (datatype == 0) {
-    for (int i = 0; i < nelements; i++)
-    {
-      array_val_int[i] *= scalari;
-      printf("Value: %d\n", array_val_int[i]);
-    }
+void scalarMultiplication(int scalari, float scalarf, int datatype,int nthreads , int parallel) {
+  if (parallel == 0) {
+    if (datatype == 0) {
+        for (int i = 0; i < nelements; i++)
+        {
+          array_val_int[i] *= scalari;
+        }
+      }
+      else {
+        for (int i = 0; i < nelements; i++)
+        {
+          array_val_float[i] *= scalarf;
+        }
+      }
   }
-  else {
-    for (int i = 0; i < nelements; i++)
-    {
-      array_val_float[i] *= scalarf;
-      printf("Value: %f\n", array_val_float[i]);
-    }
+  if (parallel == 1) {
+    if (datatype == 0) {
+        #pragma omp parallel for num_threads(nthreads)
+        for (int i = 0; i < nelements; i++)
+        {
+          array_val_int[i] *= scalari;
+        }
+      }
+      else {
+        // TODO: parallelise
+        for (int i = 0; i < nelements; i++)
+        {
+          array_val_float[i] *= scalarf;
+        }
+      }
   }
+  
   return;
 }
 
@@ -270,7 +286,7 @@ int main(int argc, char *argv[]) {
 
   // Scalar multiplication
   if (op == Scalar) {
-    scalarMultiplication(scalari, scalarf, datatype);
+    scalarMultiplication(scalari, scalarf, datatype, nthreads, parallel);
   }
   if (op == Trace) {
     int trace_sum = trace(datatype, nthreads, parallel);
