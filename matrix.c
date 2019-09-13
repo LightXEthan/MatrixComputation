@@ -8,7 +8,7 @@
 #define SIZE 14
 
 extern void memError();
-extern void addElement(char *, int, int);
+extern void addElement(char *, int, int, int, int);
 extern int getDataType(char *);
 extern void addCSR();
 
@@ -17,11 +17,12 @@ int *coo_i;
 int *array_j;
 int nelements = 0;
 
+int *array_pos;
 int *array_val_int;
 float *array_val_float;
 
 // CSR
-int *csr_rows;
+int *array_csr;
 int ncsr = 0;
 int csr_counter = 0;
 
@@ -39,17 +40,14 @@ void memError() {
 }
 
 // Add to COO format, arguments value, number, (row, col, value)
-void addElement(char *value, int pointer, int datatype) {
+void addElement(char *value, int pointer, int datatype, int nthreads, int parallel) {
   int num = atoi(value);
-  // TODO: Have 4 threads realloc these
-  coo_i = realloc(coo_i, (nelements + 1) * sizeof(int));
-  if (coo_i == NULL) memError();
-  coo_i[nelements] = pointer / nrows;
+  // Position Array from left to right
+  array_pos = realloc(array_pos, (nelements + 1) * sizeof(int));
+  if (array_pos == NULL) memError();
+  array_pos[nelements] = pointer;
 
-  array_j = realloc(array_j, (nelements + 1) * sizeof(int));
-  if (array_j == NULL) memError();
-  array_j[nelements] = pointer % ncols;
-
+  // Value array can be int or float
   if (datatype == 0) {
     array_val_int = realloc(array_val_int, (nelements + 1) * sizeof(int));
     if (array_val_int == NULL) memError();
@@ -59,15 +57,55 @@ void addElement(char *value, int pointer, int datatype) {
     array_val_float = realloc(array_val_float, (nelements + 1) * sizeof(float));
     if (array_val_float == NULL) memError();
     array_val_float[nelements] = num;
+    
   }
-  
-  // Adds to csr array if the coo_i value changes
-  if (nelements > 0 && coo_i[nelements] != coo_i[nelements - 1]) {
-    addCSR();
-  }
-  csr_counter++;
 
   nelements++;
+  return;
+}
+
+void addElementsToFormats(int nthreads, int parallel) {
+  coo_i = realloc(coo_i, (nelements) * sizeof(int));
+  if (coo_i == NULL) memError();
+  array_j = realloc(array_j, (nelements) * sizeof(int));
+  if (array_j == NULL) memError();
+  array_csr = realloc(array_csr, (nelements+1) * sizeof(int));
+  if (array_csr == NULL) memError();
+
+  if (parallel == 0) {
+    for (int i = 0; i < nelements; i++)
+    {
+      coo_i[nelements] = array_pos[i] / nrows;
+      array_j[nelements] = array_pos[i] % ncols;
+    }
+  }
+  if (parallel == 1) {
+
+    #pragma omp parallel
+    {
+      #pragma omp for
+      for (int i = 0; i < nelements; i++)
+      {
+        coo_i[i] = array_pos[i] / nrows;
+        array_j[i] = array_pos[i] % ncols;
+        
+      }
+    }
+  }
+
+  for (int i = 0; i < nelements; i++)
+  {
+    if (i > 0 && coo_i[i] != coo_i[i - 1]) {
+      int dif = csr_counter - array_csr[ncsr - 1];
+      for (int i = 0; i < dif; i++)
+      {
+        array_csr[ncsr++] = csr_counter;
+      }
+    }
+    csr_counter++;
+  }
+  
+
   return;
 }
 
@@ -88,15 +126,15 @@ void addCSR() {
   //printf("Info: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[nelements - 1]: %d!\n",csr_counter, ncsr, coo_i[nelements], coo_i[nelements - 1]);
   if (ncsr > 0) {
     // Calculates number of elements total_p - previous calculation
-    dif = csr_counter - csr_rows[ncsr - 1];
+    dif = csr_counter - array_csr[ncsr - 1];
   }
 
-  csr_rows = realloc(csr_rows, (ncsr + dif + 1) * sizeof(int));
-  if (csr_rows == NULL) memError();
-  //TODO: make parallel
+  array_csr = realloc(array_csr, (ncsr + dif + 1) * sizeof(int));
+  if (array_csr == NULL) memError();
+  // This could be made parallel but may be slower
   for (int i = 0; i < dif; i++)
   {
-    csr_rows[ncsr++] = csr_counter;
+    array_csr[ncsr++] = csr_counter;
   }
   return;
 }
@@ -183,7 +221,7 @@ int main(int argc, char *argv[]) {
   enum operations op;
 
   int nthreads = 8;
-  int parallel = 0;
+  int parallel = 1;
   printf("===== Log Start =====\nNumber of threads: %d\n", nthreads);
 
   // Time start_ps to convert matrix files
@@ -250,8 +288,8 @@ int main(int argc, char *argv[]) {
   char *token; // Value
   char *zero = "0";
 
-  csr_rows = calloc(++ncsr, sizeof(int));
-  csr_rows[0] = 0;
+  array_csr = calloc(++ncsr, sizeof(int));
+  array_csr[0] = 0;
   int pointer = 0;
 
   while (fgets(buf, SIZE, file) != NULL) {
@@ -259,15 +297,18 @@ int main(int argc, char *argv[]) {
 
     while ( token != NULL) {
       if (*token != *zero) {
-        addElement(token, pointer, datatype);
+        addElement(token, pointer, datatype, nthreads, parallel);
       }
       pointer++;
       token = strtok(NULL, s);
     }
   }
 
+  // Process the arrays to the formats
+  addElementsToFormats(nthreads, parallel);
+
   // Adds the final value(s) of CSR
-  addCSR();
+  //addCSR();
   
   // Gets end_p file process execution
   clock_t end_p = clock();
@@ -278,7 +319,7 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < nelements; i++)
   {
     //printf("COO: (%d, %d, %d)\n", coo_i[i], array_j[i], array_val_int[i]);
-    //printf("CSR: (%d, %d, %d)\n", array_val_int[i], csr_rows[i+1], array_j[i]);
+    //printf("CSR: (%d, %d, %d)\n", array_val_int[i], array_csr[i+1], array_j[i]);
   }
 
   // Times the operation time
@@ -304,7 +345,7 @@ int main(int argc, char *argv[]) {
 
   free(array_val_int);
   free(array_val_float);
-  free(csr_rows);
+  free(array_csr);
   printf("====== Log end ======\n");
 
 
