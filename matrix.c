@@ -1,36 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <omp.h>
-#include <time.h>
 
-#define SIZE 14
-
-extern void memError();
-extern void addElement(char *, int);
-extern int getDataType(char *);
-extern void addCSR();
-
-// Coordinate formats
-int *coo_i;
-int *array_j;
-int nelements = 0;
-
-float *array_val;
-
-// CSR
-int *csr_rows;
-int ncsr = 0;
-int csr_counter = 0;
-
-typedef struct {
-  int *elements;
-  int len;
-} CSC;
-
-int nrows;
-int ncols;
+#include "matrix.h"
 
 void memError() {
   perror("Problem with memory allocation. Exiting\n");
@@ -39,6 +8,34 @@ void memError() {
 
 // Add to COO format, arguments value, number, (row, col, value)
 void addElement(char *value, int element) {
+  
+  float num = atof(value);
+
+  coo_i = realloc(coo_i, (nelements + 1) * sizeof(int));
+  if (coo_i == NULL) memError();
+  coo_i[nelements] = element / nrows;
+  printf("COO_i: %d %d %d\n", coo_i[nelements], element, nrows);
+
+  array_j = realloc(array_j, (nelements + 1) * sizeof(int));
+  if (array_j == NULL) memError();
+  array_j[nelements] = element % ncols;
+
+  array_val = realloc(array_val, (nelements + 1) * sizeof(int));
+  if (array_val == NULL) memError();
+  array_val[nelements] = num;
+
+  // Adds to csr array if the coo_i value changes
+  if (nelements > 0 && coo_i[nelements] != coo_i[nelements - 1]) {
+    addCSR();
+  }
+  csr_counter++;
+  
+  nelements++;
+  return;
+}
+
+// Add to COO format, arguments value, number, (row, col, value)
+void addElement2(char *value, int element) {
   
   float num = atof(value);
 
@@ -151,7 +148,16 @@ int trace(int nthreads, int parallel) {
   return total;
 }
 
+void addition(int nthreads, int parallel) {
+  if (parallel == 0) {
+
+  }
+  return;
+}
+
 int main(int argc, char *argv[]) {
+
+  
 
   char *filename = NULL;
   char *filename2 = NULL;
@@ -176,8 +182,13 @@ int main(int argc, char *argv[]) {
         filename = argv[++i];
         printf("File: %s\n", filename);
         if (isMultiFile == 1) {
-          filename2 = argv[++i];
-          printf("File2: %s\n", filename2);
+          if (argc > i+1) {
+            filename2 = argv[++i];
+            printf("File2: %s\n", filename2);
+          } else {
+            printf("Error: file not found.\n");
+          }
+          
         }
       case 'l':
         // logs are filed
@@ -211,14 +222,20 @@ int main(int argc, char *argv[]) {
 
   // File data
   FILE *file = fopen(filename, "r");
+  FILE *file2;
   char buf[SIZE];
   
   char databuf[7];
   int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
 
+  nelements = 0;
+  csr_counter = 0;
+  ncsr = 0;
+
   // Gets the second file
   if (isMultiFile == 1) {
-    FILE *file = fopen(filename2, "r");
+    nelements2 = 0;
+    file2 = fopen(filename2, "r");
   }
 
   // Gets the datatype from the file
@@ -236,46 +253,14 @@ int main(int argc, char *argv[]) {
 
   printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
 
-  const char s[2] = " "; // Splitter
-  char *pointer;         // 
-  char save[SIZE];       // Saves the element
-  int elementlen = 0;    // length of the element
+  // Process the file
+  processFile(file, buf, 0);
 
-  csr_rows = calloc(++ncsr, sizeof(int));
-  csr_rows[0] = 0;
-  int element = 0; // position of element
-
-  while (fgets(buf, SIZE, file) != NULL) {
-    //printf("Buff: %s\n", buf); #Remove
-    pointer = &buf[0];
-    
-    while (*pointer != '\0') {
-      //printf("Pointer at: [%c]\n", *pointer); #Remove
-      if ((*pointer == ' ' || *pointer == '\n') && elementlen > 0) {
-        // Add element to format
-        save[elementlen] = '\0';
-        //printf("Save: [%s]\n", save); #Remove
-        addElement(save, element++);
-        elementlen = 0;
-      } 
-      else if (*pointer == '0' && elementlen == 0) {
-        // detects if the pointer is at a zero element
-        *pointer++;
-        if (*pointer == '\0') break;
-      }
-      else if (*pointer != ' ') {
-        // saves the characters in the element
-        save[elementlen++] = *pointer;
-      }
-      
-      *pointer++;
-      //printf("Pointer at: %c\n", *pointer);
-    }
-    //printf("Exits\n");
+  // Processes the second file
+  if (isMultiFile == 1) {
+    ncsr = 0; csr_counter = 0; // ncsr and csr_counter can be reused
+    processFile(file2, buf, 1);
   }
-
-  // Adds the final value(s) of CSR
-  addCSR();
   
   // Gets end_p file process execution
   clock_t end_p = clock();
@@ -294,7 +279,7 @@ int main(int argc, char *argv[]) {
     printf("Result of Trace sum: %d\n", trace_sum);
   }
   if (op == Addition) {
-    
+    addition(nthreads, parallel);
   }
 
   // Debugging purposes #Remove
@@ -302,11 +287,12 @@ int main(int argc, char *argv[]) {
   {
     if (datatype == 0) {
       //printf("COO: (%d, %d, %d)\n", coo_i[i], array_j[i], (int) array_val[i]);
+      printf("CSR: (%d, %d, %d)\n", (int) array_val[i], csr_rows[i+1], array_j[i]);
     }
     if (datatype == 1) {
-      //printf("COO: (%d, %d, %f)\n", coo_i[i], array_j[i], array_val[i]);
+      printf("COO: (%d, %d, %f)\n", coo_i[i], array_j[i], array_val[i]);
     }
-    //printf("CSR: (%d, %d, %d)\n", array_val[i], csr_rows[i+1], array_j[i]);
+    
   }
   
 
