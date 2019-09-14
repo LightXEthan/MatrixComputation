@@ -1,3 +1,11 @@
+/**
+ * Project 1 of CITS3402 - High Performance Computing
+ * Performs matrix operations on large sparse matricies using
+ * parallel computing.
+ * https://github.com/LightXEthan/MatrixComputation
+ * Author: Ethan Chin 22248878
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

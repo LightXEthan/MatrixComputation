@@ -1,4 +1,4 @@
-OBJ     =   matrix.o files.o
+OBJ     =   matrix.o files.o operations.o
 PROJECT =   matrix
 CFLAGS = -Wall -pedantic -fopenmp
 C99 = gcc -std=c99
@@ -11,3 +11,6 @@ matrix.o : matrix.c
 
 files.o : files.c
 	$(C99) $(CFLAGS) -c files.c
+
+operations.o : operations.c
+	$(C99) $(CFLAGS) -c operations.c

@@ -1,3 +1,9 @@
+/**
+ * Project 1 of CITS3402 - High Performance Computing
+ * Performs matrix operations on large sparse matricies using parallel computing.
+ * https://github.com/LightXEthan/MatrixComputation
+ * Author: Ethan Chin 22248878
+*/
 
 #include "matrix.h"
 
@@ -6,158 +12,7 @@ void memError() {
   exit(EXIT_FAILURE);
 }
 
-// Add to COO format, arguments value, number, (row, col, value)
-void addElement(char *value, int element) {
-  
-  float num = atof(value);
-
-  coo_i = realloc(coo_i, (nelements + 1) * sizeof(int));
-  if (coo_i == NULL) memError();
-  coo_i[nelements] = element / nrows;
-  printf("COO_i: %d %d %d\n", coo_i[nelements], element, nrows);
-
-  array_j = realloc(array_j, (nelements + 1) * sizeof(int));
-  if (array_j == NULL) memError();
-  array_j[nelements] = element % ncols;
-
-  array_val = realloc(array_val, (nelements + 1) * sizeof(int));
-  if (array_val == NULL) memError();
-  array_val[nelements] = num;
-
-  // Adds to csr array if the coo_i value changes
-  if (nelements > 0 && coo_i[nelements] != coo_i[nelements - 1]) {
-    addCSR();
-  }
-  csr_counter++;
-  
-  nelements++;
-  return;
-}
-
-// Add to COO format, arguments value, number, (row, col, value)
-void addElement2(char *value, int element) {
-  
-  float num = atof(value);
-
-  coo_i = realloc(coo_i, (nelements + 1) * sizeof(int));
-  if (coo_i == NULL) memError();
-  coo_i[nelements] = element / nrows;
-
-  array_j = realloc(array_j, (nelements + 1) * sizeof(int));
-  if (array_j == NULL) memError();
-  array_j[nelements] = element % ncols;
-
-  array_val = realloc(array_val, (nelements + 1) * sizeof(int));
-  if (array_val == NULL) memError();
-  array_val[nelements] = num;
-
-  // Adds to csr array if the coo_i value changes
-  if (nelements > 0 && coo_i[nelements] != coo_i[nelements - 1]) {
-    addCSR();
-  }
-  csr_counter++;
-  
-  nelements++;
-  return;
-}
-
-int getDataType(char *data) {
-  const char str1[4] = "int";
-  const char str2[6] = "float";
-  if (strncmp(data, str1, 3) == 0) {
-    return 0;
-  }
-  if (strncmp(data, str2, 5) == 0) {
-    return 1;
-  }
-  return -1;
-}
-
-void addCSR() {
-  int dif = 0;
-  //printf("Info: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[nelements - 1]: %d!\n",csr_counter, ncsr, coo_i[nelements], coo_i[nelements - 1]);
-  if (ncsr > 0) {
-    // Calculates number of elements total_p - previous calculation
-    dif = csr_counter - csr_rows[ncsr - 1];
-  }
-
-  csr_rows = realloc(csr_rows, (ncsr + dif + 1) * sizeof(int));
-  if (csr_rows == NULL) memError();
-  //TODO: make parallel
-  for (int i = 0; i < dif; i++)
-  {
-    csr_rows[ncsr++] = csr_counter;
-  }
-  return;
-}
-
-void scalarMultiplication(float scalar, int nthreads , int parallel) {
-  if (parallel == 0) {
-    for (int i = 0; i < nelements; i++) {
-      array_val[i] *= scalar;
-    }
-  }
-  if (parallel == 1) {
-    #pragma omp parallel for num_threads(nthreads)
-    for (int i = 0; i < nelements; i++)
-    {
-      array_val[i] *= scalar;
-    }
-  }
-  
-  return;
-}
-
-int trace(int nthreads, int parallel) {
-
-  int total = 0;
-  
-  // Non parallelised 
-  if (parallel == 0) {
-    for (int i = 0; i < nelements; i++)
-    {
-      if (coo_i[i] == array_j[i]) {
-        total += array_val[i];
-      }
-    }
-  }
-
-  // Parallelised 
-  if (parallel == 1) {
-    int results[nthreads]; // n number of threads
-
-    #pragma omp parallel num_threads(nthreads) 
-    {
-      int id = omp_get_thread_num(); // thread id
-      #pragma omp for
-      for (int i = 0; i < nelements; i++)
-      {
-        if (coo_i[i] == array_j[i]) {
-          total += array_val[i];
-        }
-      }
-      results[id] = total;
-    }
-
-    for (int i = 1; i < nthreads; i++)
-    {
-      total += results[i];
-    }
-  }
-
-  return total;
-}
-
-void addition(int nthreads, int parallel) {
-  if (parallel == 0) {
-
-  }
-  return;
-}
-
 int main(int argc, char *argv[]) {
-
-  
 
   char *filename = NULL;
   char *filename2 = NULL;
