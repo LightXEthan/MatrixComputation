@@ -18,9 +18,7 @@ int main(int argc, char *argv[]) {
   char *filename2 = NULL;
   int logtofile = 0;        // 1 = true, for the -l log flag, logs are outputted to a file
   int isMultiFile = 0;      // 1 = true, for operations that require 2 matrix (2 files)
-  enum operations{Scalar, Trace, Addition, Transpose, Multiply};
-  enum operations op;
-
+  
   int nthreads = 8;
   int parallel = 0;
   printf("===== Log Start =====\nNumber of threads: %d\n", nthreads);
@@ -102,12 +100,7 @@ int main(int argc, char *argv[]) {
     printf("Error: invalid datatype\n");
     exit(EXIT_FAILURE);
   }
-
-  nrows = atoi(fgets(buf, SIZE, file));
-  ncols = atoi(fgets(buf, SIZE, file));
-
-  printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
-
+  
   // Process the file
   processFile(file, buf, 0);
 
@@ -142,15 +135,15 @@ int main(int argc, char *argv[]) {
   {
     if (datatype == 0) {
       //printf("COO: (%d, %d, %d)\n", coo_i[i], array_j[i], (int) array_val[i]);
-      printf("CSR: (%d, %d, %d)\n", (int) array_val[i], csr_rows[i+1], array_j[i]);
+      //printf("COO: (%d, %d, %d)\n", coo_i2[i], array_j2[i], (int) array_val2[i]);
+      printf("CSR1: (%d, %d, %d)\n", (int) array_val[i], csr_rows[i+1], array_j[i]);
+      printf("CSR2: (%d, %d, %d)\n", (int) array_val2[i], csr_rows2[i+1], array_j2[i]);
     }
     if (datatype == 1) {
       printf("COO: (%d, %d, %f)\n", coo_i[i], array_j[i], array_val[i]);
     }
-    
   }
   
-
   clock_t end_o = clock();
   double total_o = (double) (end_o - start_o) / CLOCKS_PER_SEC;
   printf("Time for matrix operation: %f\n", total_o);

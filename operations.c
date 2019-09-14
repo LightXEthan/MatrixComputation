@@ -66,7 +66,7 @@ int trace(int nthreads, int parallel) {
 
 void addition(int nthreads, int parallel) {
   if (parallel == 0) {
-
+      
   }
   return;
 }

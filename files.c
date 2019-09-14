@@ -20,24 +20,53 @@ int getDataType(char *data) {
 }
 
 void processFile(FILE *file, char *buf, int filenumber) {
+  
+  // Assuming that the datatype of the two files are the same, so skip reading the datatype of the 2nd matrix
+  if (filenumber == 1) {
+    fgets(buf, SIZE, file);
+  }
+
+  // Gets the number of rows and col
+  if (filenumber == 0) {
+    nrows = atoi(fgets(buf, SIZE, file));
+    ncols = atoi(fgets(buf, SIZE, file));
+    printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
+  }
+  else {
+    int nrows2 = atoi(fgets(buf, SIZE, file));
+    int ncols2 = atoi(fgets(buf, SIZE, file));
+    if (op == Addition && nrows != nrows2 && ncols != ncols2) {
+      printf("ERROR: Matrix Sizes are not the same size of addition.");
+      exit(EXIT_FAILURE);
+    }
+  }
+
   char *pointer;         // 
   char save[SIZE];       // Saves the element
   int elementlen = 0;    // length of the element
 
-  csr_rows = calloc(++ncsr, sizeof(int));
-  csr_rows[0] = 0;
+  if (filenumber == 0) {
+    csr_rows = calloc(++ncsr, sizeof(int));
+    csr_rows[0] = 0;
+  } else {
+    csr_rows2 = calloc(++ncsr, sizeof(int));
+    csr_rows2[0] = 0;
+  }
+  
   int element = 0; // position of element
 
   while (fgets(buf, SIZE, file) != NULL) {
-    //printf("Buff: %s\n", buf); #Remove
+    //if (filenumber == 0) printf("Buff: %s\n", buf); //Remove
     pointer = &buf[0];
     
     while (*pointer != '\0') {
-      //printf("Pointer at: [%c]\n", *pointer); #Remove
+
+      //if (filenumber == 0) printf("Pointer at: [%c]\n", *pointer); //Remove
       if ((*pointer == ' ' || *pointer == '\n') && elementlen > 0) {
         // Add element to format
         save[elementlen] = '\0';
-        //printf("Save: [%s]\n", save); #Remove
+
+        //if (filenumber == 0) printf("Save: [%s]\n", save); //Remove
         // Adds the element to the arrays
         if (filenumber == 0) {
           addElement(save, element++);
@@ -63,7 +92,8 @@ void processFile(FILE *file, char *buf, int filenumber) {
     //printf("Exits\n");
   }
   // Adds the final value(s) of CSR
-  addCSR();
+  if (filenumber == 0) addCSR();
+  else addCSR2();
 }
 
 // Add to COO format, arguments value, number, (row, col, value)
@@ -74,7 +104,6 @@ void addElement(char *value, int element) {
   coo_i = realloc(coo_i, (nelements + 1) * sizeof(int));
   if (coo_i == NULL) memError();
   coo_i[nelements] = element / nrows;
-  printf("COO_i: %d %d %d\n", coo_i[nelements], element, nrows);
 
   array_j = realloc(array_j, (nelements + 1) * sizeof(int));
   if (array_j == NULL) memError();
@@ -99,31 +128,31 @@ void addElement2(char *value, int element) {
   
   float num = atof(value);
 
-  coo_i = realloc(coo_i, (nelements + 1) * sizeof(int));
-  if (coo_i == NULL) memError();
-  coo_i[nelements] = element / nrows;
+  coo_i2 = realloc(coo_i2, (nelements2 + 1) * sizeof(int));
+  if (coo_i2 == NULL) memError();
+  coo_i2[nelements2] = element / nrows;
 
-  array_j = realloc(array_j, (nelements + 1) * sizeof(int));
-  if (array_j == NULL) memError();
-  array_j[nelements] = element % ncols;
+  array_j2 = realloc(array_j2, (nelements2 + 1) * sizeof(int));
+  if (array_j2 == NULL) memError();
+  array_j2[nelements2] = element % ncols;
 
-  array_val = realloc(array_val, (nelements + 1) * sizeof(int));
-  if (array_val == NULL) memError();
-  array_val[nelements] = num;
+  array_val2 = realloc(array_val2, (nelements2 + 1) * sizeof(float));
+  if (array_val2 == NULL) memError();
+  array_val2[nelements2] = num;
 
   // Adds to csr array if the coo_i value changes
-  if (nelements > 0 && coo_i[nelements] != coo_i[nelements - 1]) {
-    addCSR();
+  if (nelements2 > 0 && coo_i2[nelements2] != coo_i2[nelements2 - 1]) {
+    addCSR2();
   }
   csr_counter++;
   
-  nelements++;
+  nelements2++;
   return;
 }
 
 void addCSR() {
   int dif = 0;
-  //printf("Info: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[nelements - 1]: %d!\n",csr_counter, ncsr, coo_i[nelements], coo_i[nelements - 1]);
+  //printf("Info1: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[nelements - 1]: %d!\n",csr_counter, ncsr, coo_i[nelements], coo_i[nelements - 1]);
   if (ncsr > 0) {
     // Calculates number of elements total_p - previous calculation
     dif = csr_counter - csr_rows[ncsr - 1];
@@ -136,5 +165,25 @@ void addCSR() {
   {
     csr_rows[ncsr++] = csr_counter;
   }
+  return;
+}
+
+void addCSR2() {
+  int dif = 0;
+  //printf("Info2: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[nelements - 1]: %d!\n",csr_counter, ncsr, coo_i2[nelements2], coo_i2[nelements2 - 1]);
+  if (ncsr > 0) {
+    // Calculates number of elements total_p - previous calculation
+    dif = csr_counter - csr_rows2[ncsr - 1];
+  }
+
+  csr_rows2 = realloc(csr_rows2, (ncsr + dif + 1) * sizeof(int));
+  if (csr_rows2 == NULL) memError();
+  
+  //TODO: make parallel
+  for (int i = 0; i < dif; i++)
+  {
+    csr_rows2[ncsr++] = csr_counter;
+  }
+  
   return;
 }

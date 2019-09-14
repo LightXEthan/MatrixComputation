@@ -20,6 +20,7 @@ extern void addElement(char *, int);
 extern void addElement2(char *, int);
 extern int getDataType(char *);
 extern void addCSR();
+extern void addCSR2();
 extern void processFile(FILE *, char *, int);
 extern void scalarMultiplication(float, int, int);
 extern int trace(int, int);
@@ -47,3 +48,6 @@ int *csr_rows2;
 
 int nrows;
 int ncols;
+
+enum operations{Scalar, Trace, Addition, Transpose, Multiply};
+enum operations op;
