@@ -123,8 +123,8 @@ int main(int argc, char *argv[]) {
     scalarMultiplication(scalar, nthreads, parallel);
   }
   if (op == Trace) {
-    int trace_sum = trace(nthreads, parallel);
-    printf("Result of Trace sum: %d\n", trace_sum);
+    float trace_sum = trace(nthreads, parallel);
+    printf("Result of Trace sum: %f\n", trace_sum);
   }
   if (op == Addition) {
     addition(nthreads, parallel);
@@ -134,25 +134,45 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < nelements; i++)
   {
     if (datatype == 0) {
-      //printf("COO: (%d, %d, %d)\n", coo_i[i], array_j[i], (int) array_val[i]);
-      //printf("COO: (%d, %d, %d)\n", coo_i2[i], array_j2[i], (int) array_val2[i]);
-      printf("CSR1: (%d, %d, %d)\n", (int) array_val[i], csr_rows[i+1], array_j[i]);
-      printf("CSR2: (%d, %d, %d)\n", (int) array_val2[i], csr_rows2[i+1], array_j2[i]);
+      //printf("COO: (%d, %d, %d)\n", array_i[i], array_j[i], (int) array_val[i]);
+      //printf("COO2: (%d, %d, %d)\n", array_i2[i], array_j2[i], (int) array_val2[i]);
+      //printf("CSR1: (%d, %d, %d)\n", (int) array_val[i], csr_rows[i+1], array_j[i]);
+      //printf("CSR2: (%d, %d, %d)\n", (int) array_val2[i], csr_rows2[i+1], array_j2[i]);
     }
     if (datatype == 1) {
-      printf("COO: (%d, %d, %f)\n", coo_i[i], array_j[i], array_val[i]);
+      printf("COO: (%d, %d, %f)\n", array_i[i], array_j[i], array_val[i]);
     }
   }
+
+  for (int i = 0; i < nelements3; i++)
+  {
+    printf("COO3: (%d, %d, %d)\n", array_i3[i], array_j3[i], (int) array_val3[i]);
+  }
+  
   
   clock_t end_o = clock();
   double total_o = (double) (end_o - start_o) / CLOCKS_PER_SEC;
   printf("Time for matrix operation: %f\n", total_o);
 
   fclose(file);
-  free(coo_i);
+  free(array_i);
   free(array_j);
   free(array_val);
   free(csr_rows);
+
+  if (isMultiFile == 1) {
+    fclose(file2);
+    free(array_i2);
+    free(array_j2);
+    free(array_val2);
+    free(csr_rows2);
+  }
+
+  if (op == Addition) {
+    free(array_i3);
+    free(array_j3);
+    free(array_val3);
+  }
 
   // Logs files
   if (logtofile == 1) {

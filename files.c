@@ -101,9 +101,9 @@ void addElement(char *value, int element) {
   
   float num = atof(value);
 
-  coo_i = realloc(coo_i, (nelements + 1) * sizeof(int));
-  if (coo_i == NULL) memError();
-  coo_i[nelements] = element / nrows;
+  array_i = realloc(array_i, (nelements + 1) * sizeof(int));
+  if (array_i == NULL) memError();
+  array_i[nelements] = element / nrows;
 
   array_j = realloc(array_j, (nelements + 1) * sizeof(int));
   if (array_j == NULL) memError();
@@ -113,8 +113,8 @@ void addElement(char *value, int element) {
   if (array_val == NULL) memError();
   array_val[nelements] = num;
 
-  // Adds to csr array if the coo_i value changes
-  if (nelements > 0 && coo_i[nelements] != coo_i[nelements - 1]) {
+  // Adds to csr array if the array_i value changes
+  if (nelements > 0 && array_i[nelements] != array_i[nelements - 1]) {
     addCSR();
   }
   csr_counter++;
@@ -128,9 +128,9 @@ void addElement2(char *value, int element) {
   
   float num = atof(value);
 
-  coo_i2 = realloc(coo_i2, (nelements2 + 1) * sizeof(int));
-  if (coo_i2 == NULL) memError();
-  coo_i2[nelements2] = element / nrows;
+  array_i2 = realloc(array_i2, (nelements2 + 1) * sizeof(int));
+  if (array_i2 == NULL) memError();
+  array_i2[nelements2] = element / nrows;
 
   array_j2 = realloc(array_j2, (nelements2 + 1) * sizeof(int));
   if (array_j2 == NULL) memError();
@@ -140,8 +140,8 @@ void addElement2(char *value, int element) {
   if (array_val2 == NULL) memError();
   array_val2[nelements2] = num;
 
-  // Adds to csr array if the coo_i value changes
-  if (nelements2 > 0 && coo_i2[nelements2] != coo_i2[nelements2 - 1]) {
+  // Adds to csr array if the array_i value changes
+  if (nelements2 > 0 && array_i2[nelements2] != array_i2[nelements2 - 1]) {
     addCSR2();
   }
   csr_counter++;
@@ -150,9 +150,28 @@ void addElement2(char *value, int element) {
   return;
 }
 
+// Add to COO format, arguments value, number, (row, col, value)
+void addElement3(int i, int j, float val) {
+  
+  array_i3 = realloc(array_i3, (nelements3 + 1) * sizeof(int));
+  if (array_i3 == NULL) memError();
+  array_i3[nelements3] = i;
+
+  array_j3 = realloc(array_j3, (nelements3 + 1) * sizeof(int));
+  if (array_j3 == NULL) memError();
+  array_j3[nelements3] = j;
+
+  array_val3 = realloc(array_val3, (nelements3 + 1) * sizeof(float));
+  if (array_val3 == NULL) memError();
+  array_val3[nelements3] = val;
+  
+  nelements3++;
+  return;
+}
+
 void addCSR() {
   int dif = 0;
-  //printf("Info1: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[nelements - 1]: %d!\n",csr_counter, ncsr, coo_i[nelements], coo_i[nelements - 1]);
+  //printf("Info1: counter: %d, ncsr: %d, array_i[noo]: %d, array_i[nelements - 1]: %d!\n",csr_counter, ncsr, array_i[nelements], array_i[nelements - 1]);
   if (ncsr > 0) {
     // Calculates number of elements total_p - previous calculation
     dif = csr_counter - csr_rows[ncsr - 1];
@@ -170,7 +189,7 @@ void addCSR() {
 
 void addCSR2() {
   int dif = 0;
-  //printf("Info2: counter: %d, ncsr: %d, coo_i[noo]: %d, coo_i[nelements - 1]: %d!\n",csr_counter, ncsr, coo_i2[nelements2], coo_i2[nelements2 - 1]);
+  //printf("Info2: counter: %d, ncsr: %d, array_i[noo]: %d, array_i[nelements - 1]: %d!\n",csr_counter, ncsr, array_i2[nelements2], array_i2[nelements2 - 1]);
   if (ncsr > 0) {
     // Calculates number of elements total_p - previous calculation
     dif = csr_counter - csr_rows2[ncsr - 1];

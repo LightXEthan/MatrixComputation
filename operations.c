@@ -24,15 +24,15 @@ void scalarMultiplication(float scalar, int nthreads , int parallel) {
   return;
 }
 
-int trace(int nthreads, int parallel) {
+float trace(int nthreads, int parallel) {
 
-  int total = 0;
+  float total = 0;
   
   // Non parallelised 
   if (parallel == 0) {
     for (int i = 0; i < nelements; i++)
     {
-      if (coo_i[i] == array_j[i]) {
+      if (array_i[i] == array_j[i]) {
         total += array_val[i];
       }
     }
@@ -48,7 +48,7 @@ int trace(int nthreads, int parallel) {
       #pragma omp for
       for (int i = 0; i < nelements; i++)
       {
-        if (coo_i[i] == array_j[i]) {
+        if (array_i[i] == array_j[i]) {
           total += array_val[i];
         }
       }
@@ -65,8 +65,45 @@ int trace(int nthreads, int parallel) {
 }
 
 void addition(int nthreads, int parallel) {
+  int pos1 = 0; int pos2 = 0;
+  nelements3 = 0;
+  int counter = nelements;
   if (parallel == 0) {
-      
+      for (int i = 0; i < counter; i++)
+      {
+        if (array_i[pos1] > array_i2[pos2] ||
+           (array_i[pos1] == array_i2[pos2] &&
+            array_j[pos1] > array_j2[pos2] )) {
+          // pos2 row and col are smaller
+          addElement3(array_i2[pos2], array_j2[pos2], array_val2[pos2]);
+          pos2++; counter++;
+        }
+        else if (array_i[pos1] < array_i2[pos2] ||
+                (array_i[pos1] == array_i2[pos2] &&
+                 array_j[pos1] < array_j2[pos2] )) {
+          // pos1 row and col are smaller
+          addElement3(array_i[pos1], array_j[pos1], array_val[pos1]);
+          pos1++;
+        }
+        else {
+          // values are the same
+          addElement3(array_i[pos1], array_j[pos1], 
+          array_val[pos1] + array_val2[pos2]);
+          pos1++; pos2++;
+        }
+        //printf("%d %d\n", pos1, pos2);
+        if (pos1 == nelements && pos2 != nelements2) {
+          addElement3(array_i2[pos2], array_j2[pos2], array_val2[pos2]);
+          return;
+        }
+        else if (pos1 != nelements && pos2 == nelements2) {
+          addElement3(array_i[pos1], array_j[pos1], array_val[pos1]);
+          return;
+        }
+        else if (pos1 >= nelements && pos2 >= nelements2) {
+          return;
+        }
+      }
   }
   return;
 }
