@@ -18,7 +18,7 @@
 extern void memError();
 extern void addElement(char *, int);
 extern void addElement2(char *, int);
-extern void addElement3(int, int, float);
+extern void addElement3(int, int, float, int);
 extern int getDataType(char *);
 extern void addCSR();
 extern void addCSR2();
