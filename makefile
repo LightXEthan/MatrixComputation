@@ -14,3 +14,8 @@ files.o : files.c
 
 operations.o : operations.c
 	$(C99) $(CFLAGS) -c operations.c
+
+clean:
+	@echo "Cleaning up..."
+	rm *.o
+	rm *.exe

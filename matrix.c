@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   int isMultiFile = 0;      // 1 = true, for operations that require 2 matrix (2 files)
   
   int nthreads = 8;
-  int parallel = 0;
+  int parallel = 1;
   printf("===== Log Start =====\nNumber of threads: %d\n", nthreads);
 
   // Time start_ps to convert matrix files

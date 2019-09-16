@@ -153,16 +153,10 @@ void addElement2(char *value, int element) {
 // Add to COO format, arguments value, number, (row, col, value)
 void addElement3(int i, int j, float val) {
   
-  array_i3 = realloc(array_i3, (nelements3 + 1) * sizeof(int));
-  if (array_i3 == NULL) memError();
   array_i3[nelements3] = i;
 
-  array_j3 = realloc(array_j3, (nelements3 + 1) * sizeof(int));
-  if (array_j3 == NULL) memError();
   array_j3[nelements3] = j;
 
-  array_val3 = realloc(array_val3, (nelements3 + 1) * sizeof(float));
-  if (array_val3 == NULL) memError();
   array_val3[nelements3] = val;
   
   nelements3++;
