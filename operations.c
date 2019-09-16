@@ -229,3 +229,15 @@ void addition(int nthreads, int parallel) {
   }
   return;
 }
+
+
+void transpose(int nthreads, int parallel) {
+
+  if (parallel == 0) {
+    
+  }
+
+  if (parallel == 1) {
+
+  }
+}

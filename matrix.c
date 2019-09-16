@@ -119,15 +119,20 @@ int main(int argc, char *argv[]) {
   clock_t start_o = clock();
 
   // Scalar multiplication
-  if (op == Scalar) {
-    scalarMultiplication(scalar, nthreads, parallel);
-  }
-  if (op == Trace) {
-    float trace_sum = trace(nthreads, parallel);
-    printf("Result of Trace sum: %f\n", trace_sum);
-  }
-  if (op == Addition) {
-    addition(nthreads, parallel);
+  switch (op) {
+    case (Scalar):
+      scalarMultiplication(scalar, nthreads, parallel);
+      break;
+    case (Trace):
+      float trace_sum = trace(nthreads, parallel);
+      printf("Result of Trace sum: %f\n", trace_sum);
+      break;
+    case (Addition):
+      addition(nthreads, parallel);
+      break;
+    case (Transpose):
+      transpose(nthreads, parallel);
+      break;
   }
 
   // Debugging purposes #Remove
