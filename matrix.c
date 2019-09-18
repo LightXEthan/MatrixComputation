@@ -18,6 +18,8 @@ int main(int argc, char *argv[]) {
   char *filename2 = NULL;
   int logtofile = 0;        // 1 = true, for the -l log flag, logs are outputted to a file
   int isMultiFile = 0;      // 1 = true, for operations that require 2 matrix (2 files)
+  char op_char[3]; // index of the operation in arguments
+  memset(op_char, 0, 3);
   
   int nthreads = 8;
   int parallel = 1;
@@ -30,6 +32,9 @@ int main(int argc, char *argv[]) {
 
   for (int i = 0; i < argc; i++)
   {
+    if (argv[i][0] != '-') {
+      printf("Error: invalid argument: %s\n", argv[i]);
+    }
     switch (argv[i][1]) {
       case 'f':
         filename = argv[++i];
@@ -43,33 +48,40 @@ int main(int argc, char *argv[]) {
           }
           
         }
+        break;
       case 'l':
         // logs are filed
         logtofile = 1;
+        break;
+      case 't':
+        // Number of threads
+        nthreads = atoi(argv[++i]);
+        break;
       case '-':
         if (argv[i][2] == 's' && argv[i][3] == 'c') {
           // Scalar Multiplication
-          op = Scalar;
+          op = Scalar; strcpy(op_char, "sc");
           scalar = atof(argv[++i]);
           printf("Scalar operation. %d\n", (int) scalar);
         }
         if (argv[i][2] == 't' && argv[i][3] == 'r') {
-          op = Trace;
+          op = Trace; strcpy(op_char, "tr");
           printf("Trace operation.\n");
         }
         if (argv[i][2] == 'a' && argv[i][3] == 'd') {
           op = Addition;
-          isMultiFile = 1;
+          isMultiFile = 1; strcpy(op_char, "ad");
           printf("Addition operation.\n");
         }
         if (argv[i][2] == 't' && argv[i][3] == 's') {
-          op = Transpose;
+          op = Transpose; strcpy(op_char, "ts");
           printf("Transpose operation.\n");
         }
         if (argv[i][2] == 'm' && argv[i][3] == 'm') {
-          op = Multiply;
+          op = Multiply; strcpy(op_char, "mm");
           printf("Mulitplication operation.\n");
         }
+        break;
     }
   }
 
@@ -97,7 +109,7 @@ int main(int argc, char *argv[]) {
   if (datatype == 0) printf("Datatype: int\n");
   if (datatype == 1) printf("Datatype: float\n");
   if (datatype == -1) {
-    printf("Error: invalid datatype\n");
+    printf("Error: invalid datatype: %s\n", data);
     exit(EXIT_FAILURE);
   }
   
@@ -117,14 +129,15 @@ int main(int argc, char *argv[]) {
   
   // Times the operation time
   clock_t start_o = clock();
+  float trace_sum;
 
   // Scalar multiplication
-  switch (op) {
+  switch(op) {
     case (Scalar):
       scalarMultiplication(scalar, nthreads, parallel);
       break;
     case (Trace):
-      float trace_sum = trace(nthreads, parallel);
+      trace_sum = trace(nthreads, parallel);
       printf("Result of Trace sum: %f\n", trace_sum);
       break;
     case (Addition):
@@ -132,6 +145,8 @@ int main(int argc, char *argv[]) {
       break;
     case (Transpose):
       transpose(nthreads, parallel);
+      break;
+    case (Multiply):
       break;
   }
 
@@ -181,7 +196,43 @@ int main(int argc, char *argv[]) {
 
   // Logs files
   if (logtofile == 1) {
-    FILE *fileout = fopen(strcat(filename,".out"), "w");
+    char *token = strtok(filename, ".\0");
+
+    FILE *fileout = fopen(strcat(++token,".out"), "w");
+    printf("Writing file to: %s\n", token);
+
+    // Add operation and file name
+    fprintf(fileout, "%s\n%s\n", op_char, filename);
+
+    // Add second file if exists
+    if (op == Addition) {
+      fprintf(fileout, "%s\n", filename2);
+    }
+
+    // Add number of threads
+    fprintf(fileout, "%d\n", nthreads);
+
+    // Addition output
+    if (op == Addition) {
+      if (!datatype) {
+        // Output file function
+      } else {
+
+      }
+    }
+
+    // Trace output
+    if (op == Trace) {
+      if (!datatype) {
+        fprintf(fileout, "%d\n", (int) trace_sum);
+      } else {
+        fprintf(fileout, "%f\n", trace_sum);
+      }
+    }
+    
+
+    // File process time & Operation time
+    fprintf(fileout, "%f\n%f\n", total_p, total_o);
     
     fclose(fileout);
   }

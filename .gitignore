@@ -4,6 +4,10 @@ matrix.exe.stackdump
 .vscode
 test.c
 
+# Testing
+example_outputs
+example_outputs.zip
+
 # Prerequisites
 *.d
 
