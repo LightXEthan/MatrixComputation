@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
   memset(op_char, 0, 3);
   
   int nthreads = 8;
-  int parallel = 1;
+  int parallel = 0;
   printf("===== Log Start =====\nNumber of threads: %d\n", nthreads);
 
   // Time start_ps to convert matrix files
@@ -238,13 +238,34 @@ int main(int argc, char *argv[]) {
     // Addition output
     if (op == Addition) {
       // Output file function
-      char bufOutput[SIZE];
-      memset(bufOutput, 0, SIZE);
+      int pos = 0; // Position in the data
+      int coordj = 0; int coordi = 0; // Coordinate to enter data
+      int coo = 0; // Points to the position in COO format
+      int val = nrows * ncols; // number of values (including zeros)
 
       // For loop, enters data to buf
-
-
-      // Output the data
+      while (pos < (val)) {
+        
+        if (coordi != 0 && (coordi % nrows) == 0) {
+          coordj++;
+        }
+        if (coordi != 0 && (coordi % ncols) == 0) {
+          coordi = 0;
+          fprintf(fileout, "\n"); //Testing purposes TODO: remove
+        }
+        //printf("IF %d == %d && %d == %d\n", coordi, array_i[coo], coordj, array_j[coo]);
+        if (coordi == array_i3[coo] && coordj == array_j3[coo]) {
+          //printf("Add element %d %d, value: %f\n", coordi, coordj, array_val[coo]);
+          fprintf(fileout, "%d ", (int) array_val3[coo]);
+          //fprintf(fileout, "%f ", array_val[coo]); TODO: Change to this
+          coo++;
+        } else {
+          // Add zero
+          fprintf(fileout, "0 ");
+          //fprintf(fileout, "0. "); TODO: Change to this
+        }
+        pos++; coordi++;
+      }
     }
     
 
