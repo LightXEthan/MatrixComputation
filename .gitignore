@@ -2,6 +2,7 @@
 matrix
 matrix.exe.stackdump
 .vscode
+test.c
 
 # Prerequisites
 *.d
