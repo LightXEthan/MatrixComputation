@@ -65,6 +65,7 @@ float trace(int nthreads, int parallel) {
 }
 
 void addition(int nthreads, int parallel) {
+  printf("Adding\n");
   int pos1 = 0; int pos2 = 0;
   nelements3 = 0;
   if (parallel == 0) {

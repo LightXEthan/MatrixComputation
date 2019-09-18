@@ -26,6 +26,7 @@ extern void processFile(FILE *, char *, int);
 extern void scalarMultiplication(float, int, int);
 extern float trace(int, int);
 extern void addition(int, int);
+extern void transpose(int, int);
 
 // Coordinate formats
 int *array_i;

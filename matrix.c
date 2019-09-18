@@ -18,9 +18,11 @@ int main(int argc, char *argv[]) {
   char *filename2 = NULL;
   int logtofile = 0;        // 1 = true, for the -l log flag, logs are outputted to a file
   int isMultiFile = 0;      // 1 = true, for operations that require 2 matrix (2 files)
+  char op_char[3]; // index of the operation in arguments
+  memset(op_char, 0, 3);
   
   int nthreads = 8;
-  int parallel = 1;
+  int parallel = 0;
   printf("===== Log Start =====\nNumber of threads: %d\n", nthreads);
 
   // Time start_ps to convert matrix files
@@ -30,6 +32,9 @@ int main(int argc, char *argv[]) {
 
   for (int i = 0; i < argc; i++)
   {
+    if (i != 0 && argv[i][0] != '-') {
+      printf("Error: invalid argument: %s\n", argv[i]);
+    }
     switch (argv[i][1]) {
       case 'f':
         filename = argv[++i];
@@ -43,33 +48,40 @@ int main(int argc, char *argv[]) {
           }
           
         }
+        break;
       case 'l':
         // logs are filed
         logtofile = 1;
+        break;
+      case 't':
+        // Number of threads
+        nthreads = atoi(argv[++i]);
+        break;
       case '-':
-        if (argv[i][2] == 's' && argv[i][3] == 'c') {
+        if (argv[i][2] == 's' && argv[i][3] == 'm') {
           // Scalar Multiplication
-          op = Scalar;
+          op = Scalar; strcpy(op_char, "sm");
           scalar = atof(argv[++i]);
           printf("Scalar operation. %d\n", (int) scalar);
         }
         if (argv[i][2] == 't' && argv[i][3] == 'r') {
-          op = Trace;
+          op = Trace; strcpy(op_char, "tr");
           printf("Trace operation.\n");
         }
         if (argv[i][2] == 'a' && argv[i][3] == 'd') {
           op = Addition;
-          isMultiFile = 1;
+          isMultiFile = 1; strcpy(op_char, "ad");
           printf("Addition operation.\n");
         }
         if (argv[i][2] == 't' && argv[i][3] == 's') {
-          op = Transpose;
+          op = Transpose; strcpy(op_char, "ts");
           printf("Transpose operation.\n");
         }
         if (argv[i][2] == 'm' && argv[i][3] == 'm') {
-          op = Multiply;
+          op = Multiply; strcpy(op_char, "mm");
           printf("Mulitplication operation.\n");
         }
+        break;
     }
   }
 
@@ -97,7 +109,7 @@ int main(int argc, char *argv[]) {
   if (datatype == 0) printf("Datatype: int\n");
   if (datatype == 1) printf("Datatype: float\n");
   if (datatype == -1) {
-    printf("Error: invalid datatype\n");
+    printf("Error: invalid datatype: %s\n", data);
     exit(EXIT_FAILURE);
   }
   
@@ -117,14 +129,15 @@ int main(int argc, char *argv[]) {
   
   // Times the operation time
   clock_t start_o = clock();
+  float trace_sum;
 
   // Scalar multiplication
-  switch (op) {
+  switch(op) {
     case (Scalar):
       scalarMultiplication(scalar, nthreads, parallel);
       break;
     case (Trace):
-      float trace_sum = trace(nthreads, parallel);
+      trace_sum = trace(nthreads, parallel);
       printf("Result of Trace sum: %f\n", trace_sum);
       break;
     case (Addition):
@@ -133,13 +146,20 @@ int main(int argc, char *argv[]) {
     case (Transpose):
       transpose(nthreads, parallel);
       break;
+    case (Multiply):
+      break;
   }
+
+  // End time of operation
+  clock_t end_o = clock();
+  double total_o = (double) (end_o - start_o) / CLOCKS_PER_SEC;
+  printf("Time for matrix operation: %f\n", total_o);
 
   // Debugging purposes #Remove
   for (int i = 0; i < nelements; i++)
   {
     if (datatype == 0) {
-      //printf("COO: (%d, %d, %d)\n", array_i[i], array_j[i], (int) array_val[i]);
+      printf("COO: (%d, %d, %d)\n", array_i[i], array_j[i], (int) array_val[i]);
       //printf("COO2: (%d, %d, %d)\n", array_i2[i], array_j2[i], (int) array_val2[i]);
       //printf("CSR1: (%d, %d, %d)\n", (int) array_val[i], csr_rows[i+1], array_j[i]);
       //printf("CSR2: (%d, %d, %d)\n", (int) array_val2[i], csr_rows2[i+1], array_j2[i]);
@@ -154,10 +174,107 @@ int main(int argc, char *argv[]) {
     printf("COO3: (%d, %d, %d)\n", array_i3[i], array_j3[i], (int) array_val3[i]);
   }
   
-  
-  clock_t end_o = clock();
-  double total_o = (double) (end_o - start_o) / CLOCKS_PER_SEC;
-  printf("Time for matrix operation: %f\n", total_o);
+
+  // Logs files
+  if (logtofile == 1) {
+    char *token = strtok(filename, ".\0");
+
+    FILE *fileout = fopen(strcat(++token,".out"), "w");
+    printf("Writing file to: %s\n", token);
+
+    // Add operation and file name
+    fprintf(fileout, "%s\n%s\n", op_char, filename);
+
+    // Add second file if exists
+    if (op == Addition) {
+      fprintf(fileout, "%s\n", filename2);
+    }
+
+    // Add number of threads
+    fprintf(fileout, "%d\n", nthreads);
+
+    // Scalar output
+    if (op == Scalar) {
+      // Output file function
+      int pos = 0; // Position in the data
+      int coordj = 0; int coordi = 0; // Coordinate to enter data
+      int coo = 0; // Points to the position in COO format
+      int val = nrows * ncols; // number of values (including zeros)
+
+      // For loop, enters data to buf
+      while (pos < (val)) {
+        
+        if (coordi != 0 && (coordi % nrows) == 0) {
+          coordj++;
+        }
+        if (coordi != 0 && (coordi % ncols) == 0) {
+          coordi = 0;
+          fprintf(fileout, "\n"); //Testing purposes TODO: remove
+        }
+        //printf("IF %d == %d && %d == %d\n", coordi, array_i[coo], coordj, array_j[coo]);
+        if (coordi == array_i[coo] && coordj == array_j[coo]) {
+          //printf("Add element %d %d, value: %f\n", coordi, coordj, array_val[coo]);
+          fprintf(fileout, "%d ", (int) array_val[coo]);
+          //fprintf(fileout, "%f ", array_val[coo]); TODO: Change to this
+          coo++;
+        } else {
+          // Add zero
+          fprintf(fileout, "0 ");
+          //fprintf(fileout, "0. "); TODO: Change to this
+        }
+        pos++; coordi++;
+      }
+    }
+
+    // Trace output
+    if (op == Trace) {
+      if (!datatype) {
+        fprintf(fileout, "%d\n", (int) trace_sum);
+      } else {
+        fprintf(fileout, "%f\n", trace_sum);
+      }
+    }
+
+    // Addition output
+    if (op == Addition) {
+      // Output file function
+      int pos = 0; // Position in the data
+      int coordj = 0; int coordi = 0; // Coordinate to enter data
+      int coo = 0; // Points to the position in COO format
+      int val = nrows * ncols; // number of values (including zeros)
+
+      // For loop, enters data to buf
+      while (pos < (val)) {
+        
+        if (coordi != 0 && (coordi % nrows) == 0) {
+          coordj++;
+        }
+        if (coordi != 0 && (coordi % ncols) == 0) {
+          coordi = 0;
+          fprintf(fileout, "\n"); //Testing purposes TODO: remove
+        }
+        //printf("IF %d == %d && %d == %d\n", coordi, array_i[coo], coordj, array_j[coo]);
+        if (coordi == array_i3[coo] && coordj == array_j3[coo]) {
+          //printf("Add element %d %d, value: %f\n", coordi, coordj, array_val[coo]);
+          fprintf(fileout, "%d ", (int) array_val3[coo]);
+          //fprintf(fileout, "%f ", array_val[coo]); TODO: Change to this
+          coo++;
+        } else {
+          // Add zero
+          fprintf(fileout, "0 ");
+          //fprintf(fileout, "0. "); TODO: Change to this
+        }
+        pos++; coordi++;
+      }
+    }
+    
+
+    // File process time & Operation time
+    fprintf(fileout, "\n%f\n%f\n", total_p, total_o);
+    
+    fclose(fileout);
+  }
+  printf("====== Log end ======\n");
 
   fclose(file);
   free(array_i);
@@ -178,14 +295,6 @@ int main(int argc, char *argv[]) {
     free(array_j3);
     free(array_val3);
   }
-
-  // Logs files
-  if (logtofile == 1) {
-    FILE *fileout = fopen(strcat(filename,".out"), "w");
-    
-    fclose(fileout);
-  }
-  printf("====== Log end ======\n");
 
 
   /*
