@@ -26,9 +26,9 @@ int main(int argc, char *argv[]) {
   char op_char[3]; // index of the operation in arguments
   memset(op_char, 0, 3);
   
-  int nthreads = 8;
+  int nthreads = 1;
   int parallel = 0;
-  printf("===== Log Start =====\nNumber of threads: %d\n", nthreads);
+  printf("===== Log Start =====\n");
 
   // Time start_ps to convert matrix files
   clock_t start_p = clock();
@@ -43,11 +43,11 @@ int main(int argc, char *argv[]) {
     switch (argv[i][1]) {
       case 'f':
         filename = argv[++i];
-        printf("File: %s\n", filename);
+        //printf("File: %s\n", filename);
         if (isMultiFile == 1) {
           if (argc > i+1) {
             filename2 = argv[++i];
-            printf("File2: %s\n", filename2);
+            //printf("File2: %s\n", filename2);
           } else {
             printf("Error: file not found.\n");
           }
@@ -62,29 +62,32 @@ int main(int argc, char *argv[]) {
         // Number of threads
         nthreads = atoi(argv[++i]);
         break;
+      case 'p':
+        parallel = 1;
+        break;
       case '-':
         if (argv[i][2] == 's' && argv[i][3] == 'm') {
           // Scalar Multiplication
           op = Scalar; strcpy(op_char, "sm");
           scalar = atof(argv[++i]);
-          printf("Scalar operation. %d\n", (int) scalar);
+          //printf("Scalar operation. %d\n", (int) scalar);
         }
         if (argv[i][2] == 't' && argv[i][3] == 'r') {
           op = Trace; strcpy(op_char, "tr");
-          printf("Trace operation.\n");
+          //printf("Trace operation.\n");
         }
         if (argv[i][2] == 'a' && argv[i][3] == 'd') {
           op = Addition;
           isMultiFile = 1; strcpy(op_char, "ad");
-          printf("Addition operation.\n");
+          //printf("Addition operation.\n");
         }
         if (argv[i][2] == 't' && argv[i][3] == 's') {
           op = Transpose; strcpy(op_char, "ts");
-          printf("Transpose operation.\n");
+          //printf("Transpose operation.\n");
         }
         if (argv[i][2] == 'm' && argv[i][3] == 'm') {
           op = Multiply; strcpy(op_char, "mm");
-          printf("Mulitplication operation.\n");
+          //printf("Mulitplication operation.\n");
         }
         break;
     }
@@ -111,12 +114,14 @@ int main(int argc, char *argv[]) {
   // Gets the datatype from the file
   char *data = fgets(databuf, 7, file);
   datatype = getDataType(data);
+  /*
   if (datatype == 0) printf("Datatype: int\n");
   if (datatype == 1) printf("Datatype: float\n");
   if (datatype == -1) {
     printf("Error: invalid datatype: %s\n", data);
     exit(EXIT_FAILURE);
   }
+  */
   
   // Process the file
   processFile(file, buf, 0);
@@ -130,7 +135,7 @@ int main(int argc, char *argv[]) {
   // Gets end_p file process execution
   clock_t end_p = clock();
   double total_p = (double) (end_p - start_p) / CLOCKS_PER_SEC;
-  printf("Time for file processing: %f\n", total_p);
+  //printf("Time for file processing: %f\n", total_p);
   
   // Times the operation time
   clock_t start_o = clock();
@@ -144,7 +149,7 @@ int main(int argc, char *argv[]) {
     case (Trace):
       if (ncols != nrows) TraceError();
       trace_sum = trace(nthreads, parallel);
-      printf("Result of Trace sum: %f\n", trace_sum);
+      //printf("Result of Trace sum: %f\n", trace_sum);
       break;
     case (Addition):
       addition(nthreads, parallel);
@@ -159,9 +164,10 @@ int main(int argc, char *argv[]) {
   // End time of operation
   clock_t end_o = clock();
   double total_o = (double) (end_o - start_o) / CLOCKS_PER_SEC;
-  printf("Time for matrix operation: %f\n", total_o);
+  //printf("Time for matrix operation: %f\n", total_o);
 
   // Debugging purposes #Remove
+  /*
   for (int i = 0; i < nelements; i++)
   {
     if (datatype == 0) {
@@ -174,19 +180,19 @@ int main(int argc, char *argv[]) {
       //printf("COO: (%d, %d, %f)\n", array_i[i], array_j[i], array_val[i]);
     }
   }
-
+  
   for (int i = 0; i < nelements3; i++)
   {
     printf("COO3: (%d, %d, %d)\n", array_i3[i], array_j3[i], (int) array_val3[i]);
   }
-  
+  */
 
   // Logs files
   if (logtofile == 1) {
     char *token = strtok(filename, ".\0");
 
     FILE *fileout = fopen(strcat(++token,".out"), "w");
-    printf("Writing file to: %s\n", token);
+    //printf("Writing file to: %s\n", token);
 
     // Add operation and file name
     fprintf(fileout, "%s\n%s\n", op_char, filename);
@@ -308,8 +314,11 @@ int main(int argc, char *argv[]) {
     // File process time & Operation time
     fprintf(fileout, "\n%f\n%f\n", total_p, total_o);
     
+    
     fclose(fileout);
   }
+  printf("Time for file processing: %f\n", total_p);
+  printf("Time for matrix operation: %f\n", total_o);
   printf("====== Log end ======\n");
 
   fclose(file);

@@ -30,7 +30,7 @@ void processFile(FILE *file, char *buf, int filenumber) {
   if (filenumber == 0) {
     nrows = atoi(fgets(buf, SIZE, file));
     ncols = atoi(fgets(buf, SIZE, file));
-    printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
+    //printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
   }
   else {
     int nrows2 = atoi(fgets(buf, SIZE, file));

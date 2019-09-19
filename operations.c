@@ -40,24 +40,14 @@ float trace(int nthreads, int parallel) {
 
   // Parallelised 
   if (parallel == 1) {
-    int results[nthreads]; // n number of threads
+    printf("I ran in parallel! %d\n", nthreads);
 
-    #pragma omp parallel num_threads(nthreads) 
+    #pragma omp parallel for reduction (+:total) num_threads(nthreads) 
+    for (int i = 0; i < nelements; i++)
     {
-      int id = omp_get_thread_num(); // thread id
-      #pragma omp for
-      for (int i = 0; i < nelements; i++)
-      {
-        if (array_i[i] == array_j[i]) {
-          total += array_val[i];
-        }
+      if (array_i[i] == array_j[i]) {
+        total += array_val[i];
       }
-      results[id] = total;
-    }
-
-    for (int i = 1; i < nthreads; i++)
-    {
-      total += results[i];
     }
   }
 
