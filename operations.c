@@ -231,7 +231,7 @@ void addition(int nthreads, int parallel) {
   return;
 }
 
-/* Function to sort an array using insertion sort*/
+// Sorts the arrays with key of columns instead of rows
 void insertionSort() 
 { 
     int i, j, key, key2, key3; 

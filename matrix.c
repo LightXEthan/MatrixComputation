@@ -12,6 +12,11 @@ void memError() {
   exit(EXIT_FAILURE);
 }
 
+void TraceError() {
+  perror("Error: Trying to do trace operation of non square file.\n");
+  exit(EXIT_FAILURE);
+}
+
 int main(int argc, char *argv[]) {
 
   char *filename = NULL;
@@ -137,6 +142,7 @@ int main(int argc, char *argv[]) {
       scalarMultiplication(scalar, nthreads, parallel);
       break;
     case (Trace):
+      if (ncols != nrows) TraceError();
       trace_sum = trace(nthreads, parallel);
       printf("Result of Trace sum: %f\n", trace_sum);
       break;
@@ -280,7 +286,7 @@ int main(int argc, char *argv[]) {
           // Move to next row
           coordi++;
           coordj = 0;
-          //fprintf(fileout, "\n"); //Testing purposes TODO: remove
+          fprintf(fileout, "\n"); //Testing purposes TODO: remove
         }
         //printf("IF %d == %d && %d == %d\n", coordj, array_i[coo], coordi, array_j[coo]);
         // coordj and coordi are swapped for transposing
