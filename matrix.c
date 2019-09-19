@@ -159,13 +159,13 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < nelements; i++)
   {
     if (datatype == 0) {
-      printf("COO: (%d, %d, %d)\n", array_i[i], array_j[i], (int) array_val[i]);
+      //printf("COO: (%d, %d, %d)\n", array_i[i], array_j[i], (int) array_val[i]);
       //printf("COO2: (%d, %d, %d)\n", array_i2[i], array_j2[i], (int) array_val2[i]);
       //printf("CSR1: (%d, %d, %d)\n", (int) array_val[i], csr_rows[i+1], array_j[i]);
       //printf("CSR2: (%d, %d, %d)\n", (int) array_val2[i], csr_rows2[i+1], array_j2[i]);
     }
     if (datatype == 1) {
-      printf("COO: (%d, %d, %f)\n", array_i[i], array_j[i], array_val[i]);
+      //printf("COO: (%d, %d, %f)\n", array_i[i], array_j[i], array_val[i]);
     }
   }
 
@@ -197,23 +197,22 @@ int main(int argc, char *argv[]) {
     if (op == Scalar) {
       // Output file function
       int pos = 0; // Position in the data
-      int coordj = 0; int coordi = 0; // Coordinate to enter data
+      int coordi = 0; int coordj = 0; // Coordinate to enter data i row, j col
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols; // number of values (including zeros)
 
       // For loop, enters data to buf
       while (pos < (val)) {
         
-        if (coordi != 0 && (coordi % nrows) == 0) {
-          coordj++;
-        }
-        if (coordi != 0 && (coordi % ncols) == 0) {
-          coordi = 0;
+        if (coordj != 0 && (coordj % ncols) == 0) {
+          // Move to next row
+          coordi++;
+          coordj = 0;
           fprintf(fileout, "\n"); //Testing purposes TODO: remove
         }
-        //printf("IF %d == %d && %d == %d\n", coordi, array_i[coo], coordj, array_j[coo]);
+        //printf("IF %d == %d && %d == %d\n", coordj, array_i[coo], coordi, array_j[coo]);
         if (coordi == array_i[coo] && coordj == array_j[coo]) {
-          //printf("Add element %d %d, value: %f\n", coordi, coordj, array_val[coo]);
+          //printf("Add element %d %d, value: %f\n", coordj, coordi, array_val[coo]);
           fprintf(fileout, "%d ", (int) array_val[coo]);
           //fprintf(fileout, "%f ", array_val[coo]); TODO: Change to this
           coo++;
@@ -222,7 +221,7 @@ int main(int argc, char *argv[]) {
           fprintf(fileout, "0 ");
           //fprintf(fileout, "0. "); TODO: Change to this
         }
-        pos++; coordi++;
+        pos++; coordj++;
       }
     }
 
@@ -246,10 +245,8 @@ int main(int argc, char *argv[]) {
       // For loop, enters data to buf
       while (pos < (val)) {
         
-        if (coordi != 0 && (coordi % nrows) == 0) {
-          coordj++;
-        }
         if (coordi != 0 && (coordi % ncols) == 0) {
+          coordj++;
           coordi = 0;
           fprintf(fileout, "\n"); //Testing purposes TODO: remove
         }
@@ -265,6 +262,39 @@ int main(int argc, char *argv[]) {
           //fprintf(fileout, "0. "); TODO: Change to this
         }
         pos++; coordi++;
+      }
+    }
+
+    // Transpose output
+    if (op == Transpose) {
+      // Output file function
+      int pos = 0; // Position in the data
+      int coordi = 0; int coordj = 0; // Coordinate to enter data i row, j col
+      int coo = 0; // Points to the position in COO format
+      int val = nrows * ncols; // number of values (including zeros)
+
+      // For loop, enters data to buf
+      while (pos < (val)) {
+        
+        if (coordj != 0 && (coordj % ncols) == 0) {
+          // Move to next row
+          coordi++;
+          coordj = 0;
+          //fprintf(fileout, "\n"); //Testing purposes TODO: remove
+        }
+        //printf("IF %d == %d && %d == %d\n", coordj, array_i[coo], coordi, array_j[coo]);
+        // coordj and coordi are swapped for transposing
+        if (coordj == array_i[coo] && coordi == array_j[coo]) {
+          //printf("Add element %d %d, value: %f\n", coordj, coordi, array_val[coo]);
+          fprintf(fileout, "%d ", (int) array_val[coo]);
+          //fprintf(fileout, "%f ", array_val[coo]); TODO: Change to this
+          coo++;
+        } else {
+          // Add zero
+          fprintf(fileout, "0 ");
+          //fprintf(fileout, "0. "); TODO: Change to this
+        }
+        pos++; coordj++;
       }
     }
     

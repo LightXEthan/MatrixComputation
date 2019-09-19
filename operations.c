@@ -231,14 +231,38 @@ void addition(int nthreads, int parallel) {
   return;
 }
 
+/* Function to sort an array using insertion sort*/
+void insertionSort() 
+{ 
+    int i, j, key, key2, key3; 
+    for (i = 1; i < nelements; i++) { 
+      
+        key = array_j[i]; // Value
+        key2 = array_i[i]; // Second value
+        key3 = array_val[i]; // Third value
+        j = i - 1; 
+
+        /* Move elements to one position ahead 
+          of their current position */
+        while (j >= 0 && array_j[j] > key) { 
+            array_j[j + 1] = array_j[j]; 
+            array_i[j + 1] = array_i[j]; 
+            array_val[j + 1] = array_val[j]; 
+            j--; 
+        } 
+        array_j[j + 1] = key; 
+        array_i[j + 1] = key2; 
+        array_val[j + 1] = key3; 
+    } 
+} 
 
 void transpose(int nthreads, int parallel) {
-
+  // row and col and then insertion sort
   if (parallel == 0) {
-    
+    insertionSort();
   }
 
   if (parallel == 1) {
-
+    insertionSort(); //TODO parallel
   }
 }
