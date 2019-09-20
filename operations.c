@@ -131,6 +131,7 @@ void addition(int nthreads, int parallel) {
     // Calculate the number of elements
     int counter = nelements + nelements2; // Max number possible
     int newcounter = 0;
+    int end = 0;
 
     // Allocate the memory
     array_i3 = calloc(counter, sizeof(int));
@@ -141,7 +142,7 @@ void addition(int nthreads, int parallel) {
 
     array_val3 = calloc(counter, sizeof(float));
     if (array_val3 == NULL) memError();
-    
+    printf("test\n");
     // Parallel
     #pragma omp parallel
     {
@@ -149,57 +150,64 @@ void addition(int nthreads, int parallel) {
       {
         for (int i = 0; i < counter; i++)
         {
-          if (array_i[pos1] > array_i2[pos2] ||
-             (array_i[pos1] == array_i2[pos2] &&
-              array_j[pos1] > array_j2[pos2] )) {
-            // pos2 row and col are smaller
-            #pragma omp task firstprivate(nelements3)
+          #pragma omp task firstprivate(nelements3)
+            //printf("nelements%d\n", nelements3);
+            if (array_i[pos1] > array_i2[pos2] ||
+                (array_i[pos1] == array_i2[pos2] &&
+                array_j[pos1] > array_j2[pos2] )) {
+              // pos2 row and col are smaller
               array_i3[nelements3] = array_i2[pos2];
               array_j3[nelements3] = array_j2[pos2];
               array_val3[nelements3] = array_val2[pos2];
-            
-            nelements3++; pos2++;
-          }
-          else if (array_i[pos1] < array_i2[pos2] ||
-                  (array_i[pos1] == array_i2[pos2] &&
-                   array_j[pos1] < array_j2[pos2] )) {
-            // pos1 row and col are smaller
-            #pragma omp task firstprivate(nelements3)
+              pos2++;
+              
+            }
+
+          #pragma omp task firstprivate(nelements3)
+            //printf("nelements%d\n", nelements3);
+            if (array_i[pos1] < array_i2[pos2] ||
+               (array_i[pos1] == array_i2[pos2] &&
+                array_j[pos1] < array_j2[pos2] )) {
+              // pos1 row and col are smaller
               array_i3[nelements3] = array_i[pos1];
               array_j3[nelements3] = array_j[pos1];
               array_val3[nelements3] = array_val[pos1];
-            nelements3++; pos1++;
-          }
-          else {
-            // values are the same
-            #pragma omp task firstprivate(nelements3)
+              pos1++;
+            }
+          #pragma omp task firstprivate(nelements3)
+            if (array_i[pos1] == array_i2[pos2] && array_j[pos1] == array_j2[pos2]) {
+              // values are the same
               array_i3[nelements3] = array_i[pos1];
               array_j3[nelements3] = array_j[pos1];
               array_val3[nelements3] = array_val[pos1] + array_val2[pos2];
-            
-            nelements3++; pos1++; pos2++;
-          }
-          if (pos1 == nelements && pos2 != nelements2) {
-            #pragma omp task firstprivate(nelements3)
+              
+              pos1++; pos2++;
+            }
+          #pragma omp taskwait
+          nelements3++;
+          #pragma omp task firstprivate(nelements3)
+            if (pos1 == nelements && pos2 != nelements2) {
               array_i3[nelements3] = array_i2[pos2];
               array_j3[nelements3] = array_j2[pos2];
               array_val3[nelements3] = array_val2[pos2];
-            
-            nelements3++;
-            break;
-          }
-          else if (pos1 != nelements && pos2 == nelements2) {
-            #pragma omp task firstprivate(nelements3)
+              nelements3++;
+              end = 1;
+            }
+          #pragma omp task firstprivate(nelements3)
+            if (pos1 != nelements && pos2 == nelements2) {
               array_i3[nelements3] = array_i[pos1];
               array_j3[nelements3] = array_j[pos1];
               array_val3[nelements3] = array_val[pos1];
-            
-            nelements3++;
-            break;
+              nelements3++;
+              end = 1;
           }
-          else if (pos1 >= nelements && pos2 >= nelements2) {
-            break;
-          }
+          #pragma omp task firstprivate(nelements3)
+            if (pos1 >= nelements && pos2 >= nelements2) {
+              end = 1;
+            }
+          
+          #pragma omp taskwait
+          if (end) break;
           newcounter++;
         }
       }
