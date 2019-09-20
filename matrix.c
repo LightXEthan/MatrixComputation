@@ -160,6 +160,7 @@ int main(int argc, char *argv[]) {
     case (Multiply):
       break;
   }
+  printf("End of operation\n");
 
   // End time of operation
   clock_t end_o = clock();
@@ -181,6 +182,7 @@ int main(int argc, char *argv[]) {
     }
   }
   
+  printf("Nelements3: %d\n", nelements3);
   for (int i = 0; i < nelements3; i++)
   {
     printf("COO3: (%d, %d, %d)\n", array_i3[i], array_j3[i], (int) array_val3[i]);
@@ -189,14 +191,17 @@ int main(int argc, char *argv[]) {
 
   // Logs files
   if (logtofile == 1) {
+    char *outputfile = strdup(filename);
     char *token = strtok(filename, ".\0");
 
     FILE *fileout = fopen(strcat(++token,".out"), "w");
+    
     //printf("Writing file to: %s\n", token);
 
     // Add operation and file name
-    fprintf(fileout, "%s\n%s\n", op_char, filename);
-
+    fprintf(fileout, "%s\n%s\n", op_char, outputfile);
+    free(outputfile);
+    free(token);
     // Add second file if exists
     if (op == Addition) {
       fprintf(fileout, "%s\n", filename2);
@@ -220,7 +225,7 @@ int main(int argc, char *argv[]) {
           // Move to next row
           coordi++;
           coordj = 0;
-          fprintf(fileout, "\n"); //Testing purposes TODO: remove
+          //fprintf(fileout, "\n"); //Testing purposes TODO: remove
         }
         //printf("IF %d == %d && %d == %d\n", coordj, array_i[coo], coordi, array_j[coo]);
         if (coordi == array_i[coo] && coordj == array_j[coo]) {
@@ -253,14 +258,14 @@ int main(int argc, char *argv[]) {
       int coordj = 0; int coordi = 0; // Coordinate to enter data
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols; // number of values (including zeros)
-
+      
       // For loop, enters data to buf
       while (pos < (val)) {
         
-        if (coordi != 0 && (coordi % ncols) == 0) {
-          coordj++;
-          coordi = 0;
-          fprintf(fileout, "\n"); //Testing purposes TODO: remove
+        if (coordj != 0 && (coordj % ncols) == 0) {
+          coordi++;
+          coordj = 0;
+          //fprintf(fileout, "\n"); //Testing purposes TODO: remove
         }
         //printf("IF %d == %d && %d == %d\n", coordi, array_i[coo], coordj, array_j[coo]);
         if (coordi == array_i3[coo] && coordj == array_j3[coo]) {
@@ -273,7 +278,7 @@ int main(int argc, char *argv[]) {
           fprintf(fileout, "0 ");
           //fprintf(fileout, "0. "); TODO: Change to this
         }
-        pos++; coordi++;
+        pos++; coordj++;
       }
     }
 
@@ -292,7 +297,7 @@ int main(int argc, char *argv[]) {
           // Move to next row
           coordi++;
           coordj = 0;
-          fprintf(fileout, "\n"); //Testing purposes TODO: remove
+          //fprintf(fileout, "\n"); //Testing purposes TODO: remove
         }
         //printf("IF %d == %d && %d == %d\n", coordj, array_i[coo], coordi, array_j[coo]);
         // coordj and coordi are swapped for transposing

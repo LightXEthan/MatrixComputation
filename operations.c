@@ -40,8 +40,6 @@ float trace(int nthreads, int parallel) {
 
   // Parallelised 
   if (parallel == 1) {
-    printf("I ran in parallel! %d\n", nthreads);
-
     #pragma omp parallel for reduction (+:total) num_threads(nthreads) 
     for (int i = 0; i < nelements; i++)
     {
@@ -55,8 +53,8 @@ float trace(int nthreads, int parallel) {
 }
 
 void addition(int nthreads, int parallel) {
-  printf("Adding\n");
   int pos1 = 0; int pos2 = 0;
+  
   nelements3 = 0;
   if (parallel == 0) {
 
@@ -75,17 +73,19 @@ void addition(int nthreads, int parallel) {
 
     for (int i = 0; i < counter; i++)
     {
+      
       if (array_i[pos1] > array_i2[pos2] ||
-          (array_i[pos1] == array_i2[pos2] &&
+         (array_i[pos1] == array_i2[pos2] &&
           array_j[pos1] > array_j2[pos2] )) {
         // pos2 row and col are smaller
         addElement3(array_i2[pos2], array_j2[pos2], array_val2[pos2], nelements3);
         nelements3++;
+        
         pos2++; counter++;
       }
       else if (array_i[pos1] < array_i2[pos2] ||
               (array_i[pos1] == array_i2[pos2] &&
-                array_j[pos1] < array_j2[pos2] )) {
+               array_j[pos1] < array_j2[pos2] )) {
         // pos1 row and col are smaller
         addElement3(array_i[pos1], array_j[pos1], array_val[pos1], nelements3);
         nelements3++;
@@ -93,7 +93,6 @@ void addition(int nthreads, int parallel) {
       }
       else {
         // values are the same
-        
         addElement3(array_i[pos1], array_j[pos1], 
           array_val[pos1] + array_val2[pos2], nelements3);
         nelements3++;
