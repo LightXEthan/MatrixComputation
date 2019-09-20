@@ -160,8 +160,7 @@ int main(int argc, char *argv[]) {
     case (Multiply):
       break;
   }
-  printf("End of operation\n");
-
+  
   // End time of operation
   clock_t end_o = clock();
   double total_o = (double) (end_o - start_o) / CLOCKS_PER_SEC;

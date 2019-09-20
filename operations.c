@@ -142,7 +142,7 @@ void addition(int nthreads, int parallel) {
 
     array_val3 = calloc(counter, sizeof(float));
     if (array_val3 == NULL) memError();
-    printf("test\n");
+    
     // Parallel
     #pragma omp parallel
     {
