@@ -279,37 +279,76 @@ int multiply(int nthreads, int parallel) {
   int row_top = 0;  // Pointer to the top of array 1
   int row_bot = 0;  // Pointer to the bottom of array 1
 
-  // Loops through each element in the new array
-  for (int i = 0; i < size; i++)
-  {
-    yr = 0; //printf("Loops\n");
-    // Changes row pointers when i reaches the end of the coloumn on array 2
-    if (i % ncols2 == 0) {
-      row_bot = row_top;
-      row_top = csr_rows[row_bot+1];
-    }
-    //
-    for (int j = row_bot; j < row_top; j++)
+  if (!parallel) {
+    // Loops through each element in the new array
+    for (int i = 0; i < size; i++)
     {
-      // Iterates through all elements in the 2nd array
-      for (int k = 0; k < nelements2; k++)
+      yr = 0;
+      // Changes row pointers when i reaches the end of the coloumn on array 2
+      if (i % ncols2 == 0) {
+        row_bot = row_top;
+        row_top = csr_rows[row_bot+1];
+      }
+      //
+      for (int j = row_bot; j < row_top; j++)
       {
-        // Matches the numbers that are multiplied
-        if (array_j2[k] == i % ncols2 && array_i2[k] == array_j[j]) {
-          //printf("Info: %d, %d, %d, %d\n", array_j2[k], i, array_i2[k], array_j[j]); //Remove
-          yr += array_val[j] * array_val2[k];
-          break;
+        // Iterates through all elements in the 2nd array
+        for (int k = 0; k < nelements2; k++)
+        {
+          // Matches the numbers that are multiplied
+          if (array_j2[k] == i % ncols2 && array_i2[k] == array_j[j]) {
+            //printf("Info: %d, %d, %d, %d\n", array_j2[k], i, array_i2[k], array_j[j]); //Remove
+            yr += array_val[j] * array_val2[k];
+            break;
+          }
         }
       }
-    }
 
-    array_i3[i] = i / ncols2;
-    array_j3[i] = i % ncols2;
-    array_val3[i] = yr;
-    
-    //row_top = 0;
-    //printf("Info: %d %d %d %d %f\n", i,array_i[i], array_j2[i], yr, array_val[0]);
+      array_i3[i] = i / ncols2;
+      array_j3[i] = i % ncols2;
+      array_val3[i] = yr;
+      
+      //row_top = 0;
+      //printf("Info: %d %d %d %d %f\n", i,array_i[i], array_j2[i], yr, array_val[0]);
+    }
   }
+
+  if (parallel) {
+    // Loops through each element in the new array
+    #pragma omp parallel for num_threads(nthreads)
+    for (int i = 0; i < size; i++)
+    {
+      yr = 0; //printf("Loops\n");
+      // Changes row pointers when i reaches the end of the coloumn on array 2
+      if (i % ncols2 == 0) {
+        row_bot = row_top;
+        row_top = csr_rows[row_bot+1];
+      }
+      // Loops through the row in the 1st array
+      for (int j = row_bot; j < row_top; j++)
+      {
+        // Iterates through all elements in the 2nd array
+        for (int k = 0; k < nelements2; k++)
+        {
+          // Matches the numbers that are multiplied
+          if (array_j2[k] == i % ncols2 && array_i2[k] == array_j[j]) {
+            //printf("Info: %d, %d, %d, %d\n", array_j2[k], i, array_i2[k], array_j[j]); //Remove
+            yr += array_val[j] * array_val2[k];
+            break;
+          }
+        }
+      }
+
+      array_i3[i] = i / ncols2;
+      array_j3[i] = i % ncols2;
+      array_val3[i] = yr;
+      
+      //row_top = 0;
+      //printf("Info: %d %d %d %d %f\n", i,array_i[i], array_j2[i], yr, array_val[0]);
+    }
+  }
+
+  
   
   return 1;
 }
