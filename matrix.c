@@ -168,7 +168,6 @@ int main(int argc, char *argv[]) {
       }
       break;
   }
-  printf("End of operation\n");
 
   // End time of operation
   clock_t end_o = clock();
@@ -194,14 +193,14 @@ int main(int argc, char *argv[]) {
     //printf("COO2: (%d, %d, %d)\n", array_i2[i], array_j2[i], (int) array_val2[i]);
     printf("CSR2: (%d, %d, %d)\n", (int) array_val2[i], csr_rows2[i+1], array_j2[i]);
   }
-  */
+  
   
   printf("Nelements3: %d\n", nelements3);
   for (int i = 0; i < nelements3; i++)
   {
     printf("COO3: (%d, %d, %d)\n", array_i3[i], array_j3[i], (int) array_val3[i]);
   }
-  
+  */
 
   // Logs files
   if (logtofile == 1) {
@@ -217,7 +216,7 @@ int main(int argc, char *argv[]) {
     free(outputfile);
     free(token);
     // Add second file if exists
-    if (op == Addition) {
+    if (op == Addition || op == Multiply) {
       fprintf(fileout, "%s\n", filename2);
     }
 
@@ -327,10 +326,6 @@ int main(int argc, char *argv[]) {
         }
         pos++; coordj++;
       }
-
-      if (op == Multiply) {
-        printf("Multiply log\n");
-      }
     }
 
     // Multiply output
@@ -364,12 +359,9 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    
-
     // File process time & Operation time
     fprintf(fileout, "\n%f\n%f\n", total_p, total_o);
-    
-    
+        
     fclose(fileout);
   }
   printf("Time for file processing: %f\n", total_p);
