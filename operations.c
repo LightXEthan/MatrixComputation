@@ -307,9 +307,6 @@ int multiply(int nthreads, int parallel) {
       array_i3[i] = i / ncols2;
       array_j3[i] = i % ncols2;
       array_val3[i] = yr;
-      
-      //row_top = 0;
-      //printf("Info: %d %d %d %d %f\n", i,array_i[i], array_j2[i], yr, array_val[0]);
     }
   }
 
@@ -343,13 +340,7 @@ int multiply(int nthreads, int parallel) {
       array_i3[i] = i / ncols2;
       array_j3[i] = i % ncols2;
       array_val3[i] = yr;
-      
-      //row_top = 0;
-      //printf("Info: %d %d %d %d %f\n", i,array_i[i], array_j2[i], yr, array_val[0]);
     }
   }
-
-  
-  
   return 1;
 }

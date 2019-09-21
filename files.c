@@ -220,4 +220,5 @@ void freeAll() {
   free(array_i3);
   free(array_j3);
   free(array_val3);
+  printf("====== Log end ======\n");
 }

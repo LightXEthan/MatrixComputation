@@ -30,9 +30,6 @@ int main(int argc, char *argv[]) {
   int parallel = 0;
   printf("===== Log Start =====\n");
 
-  // Time start_ps to convert matrix files
-  clock_t start_p = clock();
-
   float scalar;
 
   for (int i = 0; i < argc; i++)
@@ -94,6 +91,10 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  // Time start_ps to convert matrix files
+  printf("Starting file processing...\n");
+  clock_t start_p = clock();
+
   // File data
   FILE *file = fopen(filename, "r");
   FILE *file2;
@@ -115,14 +116,6 @@ int main(int argc, char *argv[]) {
   // Gets the datatype from the file
   char *data = fgets(databuf, 7, file);
   datatype = getDataType(data);
-  /*
-  if (datatype == 0) printf("Datatype: int\n");
-  if (datatype == 1) printf("Datatype: float\n");
-  if (datatype == -1) {
-    printf("Error: invalid datatype: %s\n", data);
-    exit(EXIT_FAILURE);
-  }
-  */
   
   // Process the file
   processFile(file, buf, 0);
@@ -136,9 +129,10 @@ int main(int argc, char *argv[]) {
   // Gets end_p file process execution
   clock_t end_p = clock();
   double total_p = (double) (end_p - start_p) / CLOCKS_PER_SEC;
-  //printf("Time for file processing: %f\n", total_p);
+  printf("File processing complete. Time: %f\n", total_p);
   
   // Times the operation time
+  printf("Starting %s matrix operation...\n", op_char);
   clock_t start_o = clock();
   float trace_sum;
 
@@ -165,6 +159,7 @@ int main(int argc, char *argv[]) {
         freeAll();
         fclose(file);
         fclose(file2);
+        exit(EXIT_FAILURE);
       }
       break;
   }
@@ -172,7 +167,7 @@ int main(int argc, char *argv[]) {
   // End time of operation
   clock_t end_o = clock();
   double total_o = (double) (end_o - start_o) / CLOCKS_PER_SEC;
-  //printf("Time for matrix operation: %f\n", total_o);
+  printf("Matrix operation complete. Time: %f\n", total_o);
 
   // Debugging purposes #Remove
   /*
@@ -209,7 +204,7 @@ int main(int argc, char *argv[]) {
 
     FILE *fileout = fopen(strcat(++token,".out"), "w");
     
-    //printf("Writing file to: %s\n", token);
+    printf("Logging file to: %s\n", token);
 
     // Add operation and file name
     fprintf(fileout, "%s\n%s\n", op_char, outputfile);
@@ -238,18 +233,15 @@ int main(int argc, char *argv[]) {
           // Move to next row
           coordi++;
           coordj = 0;
-          //fprintf(fileout, "\n"); //Testing purposes TODO: remove
         }
-        //printf("IF %d == %d && %d == %d\n", coordj, array_i[coo], coordi, array_j[coo]);
         if (coordi == array_i[coo] && coordj == array_j[coo]) {
-          //printf("Add element %d %d, value: %f\n", coordj, coordi, array_val[coo]);
-          fprintf(fileout, "%d ", (int) array_val[coo]);
-          //fprintf(fileout, "%f ", array_val[coo]); TODO: Change to this
+          if (datatype == 0) fprintf(fileout, "%d ", (int) array_val[coo]);
+          else fprintf(fileout, "%f ", array_val[coo]);
           coo++;
         } else {
           // Add zero
-          fprintf(fileout, "0 ");
-          //fprintf(fileout, "0. "); TODO: Change to this
+          if (datatype == 0) fprintf(fileout, "0 ");
+          else fprintf(fileout, "0. ");
         }
         pos++; coordj++;
       }
@@ -363,11 +355,11 @@ int main(int argc, char *argv[]) {
     fprintf(fileout, "\n%f\n%f\n", total_p, total_o);
         
     fclose(fileout);
+    printf("Logging file completed.\n");
   }
-  printf("Time for file processing: %f\n", total_p);
-  printf("Time for matrix operation: %f\n", total_o);
-  printf("====== Log end ======\n");
-
+  
+  
+  // Free all memory allocations
   fclose(file);
   free(array_i);
   free(array_j);
@@ -388,21 +380,5 @@ int main(int argc, char *argv[]) {
     free(array_val3);
   }
 
-
-  /*
-  #pragma omp parallel
-  {
-    printf("Hello!\n");
-  }
-  */
-
-  /*
-  int b = 2;
-  float a = 0.1;
-  float c[2];
-  c[0] = a;
-  c[1] = (float) b;
-  printf("%f, %f, %d\n", c[0], c[1], (int) c[1]);
-
-  */
+  printf("====== Log end ======\n");
 }
