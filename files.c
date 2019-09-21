@@ -20,11 +20,6 @@ int getDataType(char *data) {
 }
 
 void processFile(FILE *file, char *buf, int filenumber) {
-  
-  // Assuming that the datatype of the two files are the same, so skip reading the datatype of the 2nd matrix
-  if (filenumber == 1) {
-    fgets(buf, SIZE, file);
-  }
 
   // Gets the number of rows and col
   if (filenumber == 0) {
@@ -33,8 +28,10 @@ void processFile(FILE *file, char *buf, int filenumber) {
     //printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
   }
   else {
-    int nrows2 = atoi(fgets(buf, SIZE, file));
-    int ncols2 = atoi(fgets(buf, SIZE, file));
+    // Assuming that the datatype of the two files are the same, so skip reading the datatype of the 2nd matrix
+    fgets(buf, SIZE, file);
+    nrows2 = atoi(fgets(buf, SIZE, file));
+    ncols2 = atoi(fgets(buf, SIZE, file));
     if (op == Addition && nrows != nrows2 && ncols != ncols2) {
       printf("ERROR: Matrix Sizes are not the same size of addition.");
       exit(EXIT_FAILURE);
@@ -56,17 +53,17 @@ void processFile(FILE *file, char *buf, int filenumber) {
   int element = 0; // position of element
 
   while (fgets(buf, SIZE, file) != NULL) {
-    //if (filenumber == 0) printf("Buff: %s\n", buf); //Remove
+    //if (filenumber == 1) printf("Buff: [%s]\n", buf); //Remove
     pointer = &buf[0];
     
     while (*pointer != '\0') {
 
-      //if (filenumber == 0) printf("Pointer at: [%c]\n", *pointer); //Remove
+      //if (filenumber == 1) printf("Pointer at: [%c]\n", *pointer); //Remove
       if ((*pointer == ' ' || *pointer == '\n') && elementlen > 0) {
         // Add element to format
         save[elementlen] = '\0';
 
-        //if (filenumber == 0) printf("Save: [%s]\n", save); //Remove
+        //if (filenumber == 1) printf("Save: [%s]\n", save); //Remove
         // Adds the element to the arrays
         if (filenumber == 0) {
           addElement(save, element++);
@@ -91,6 +88,16 @@ void processFile(FILE *file, char *buf, int filenumber) {
     }
     //printf("Exits\n");
   }
+
+  // Check end of file
+  if (elementlen > 0) {
+    if (filenumber == 0) {
+      addElement(save, element++);
+    } else {
+      addElement2(save, element++);
+    }
+  }
+  
   // Adds the final value(s) of CSR
   if (filenumber == 0) addCSR();
   else addCSR2();
@@ -103,7 +110,7 @@ void addElement(char *value, int element) {
 
   array_i = realloc(array_i, (nelements + 1) * sizeof(int));
   if (array_i == NULL) memError();
-  array_i[nelements] = element / nrows;
+  array_i[nelements] = element / ncols;
 
   array_j = realloc(array_j, (nelements + 1) * sizeof(int));
   if (array_j == NULL) memError();
@@ -125,16 +132,15 @@ void addElement(char *value, int element) {
 
 // Add to COO format, arguments value, number, (row, col, value)
 void addElement2(char *value, int element) {
-  
   float num = atof(value);
 
   array_i2 = realloc(array_i2, (nelements2 + 1) * sizeof(int));
   if (array_i2 == NULL) memError();
-  array_i2[nelements2] = element / nrows;
+  array_i2[nelements2] = element / ncols2;
 
   array_j2 = realloc(array_j2, (nelements2 + 1) * sizeof(int));
   if (array_j2 == NULL) memError();
-  array_j2[nelements2] = element % ncols;
+  array_j2[nelements2] = element % ncols2;
 
   array_val2 = realloc(array_val2, (nelements2 + 1) * sizeof(float));
   if (array_val2 == NULL) memError();
@@ -142,6 +148,7 @@ void addElement2(char *value, int element) {
 
   // Adds to csr array if the array_i value changes
   if (nelements2 > 0 && array_i2[nelements2] != array_i2[nelements2 - 1]) {
+    
     addCSR2();
   }
   csr_counter++;
@@ -171,7 +178,7 @@ void addCSR() {
 
   csr_rows = realloc(csr_rows, (ncsr + dif + 1) * sizeof(int));
   if (csr_rows == NULL) memError();
-  //TODO: make parallel
+
   for (int i = 0; i < dif; i++)
   {
     csr_rows[ncsr++] = csr_counter;
@@ -189,8 +196,7 @@ void addCSR2() {
 
   csr_rows2 = realloc(csr_rows2, (ncsr + dif + 1) * sizeof(int));
   if (csr_rows2 == NULL) memError();
-  
-  //TODO: make parallel
+
   for (int i = 0; i < dif; i++)
   {
     csr_rows2[ncsr++] = csr_counter;
@@ -199,3 +205,19 @@ void addCSR2() {
   return;
 }
 
+void freeAll() {
+  free(array_i);
+  free(array_j);
+  free(array_val);
+  free(csr_rows);
+
+  free(array_i2);
+  free(array_j2);
+  free(array_val2);
+  free(csr_rows2);
+
+
+  free(array_i3);
+  free(array_j3);
+  free(array_val3);
+}
