@@ -315,7 +315,7 @@ int multiply(int nthreads, int parallel) {
 
   if (parallel) {
     // Loops through each element in the new array
-    
+    #pragma omp parallel for num_threads(nthreads)
     for (int i = 0; i < size; i++)
     {
       yr = 0; //printf("Loops\n");
@@ -325,7 +325,7 @@ int multiply(int nthreads, int parallel) {
         row_top = csr_rows[row_bot+1];
       }
       // Loops through the row in the 1st array
-      #pragma omp parallel for reduction(+:yr) num_threads(nthreads)
+      
       for (int j = row_bot; j < row_top; j++)
       {
         // Iterates through all elements in the 2nd array
