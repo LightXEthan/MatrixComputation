@@ -232,7 +232,7 @@ void insertionSort()
         j = i - 1; 
 
         /* Move elements to one position ahead 
-          of their current position */
+          of throw_next current position */
         while (j >= 0 && array_j[j] > key) { 
             array_j[j + 1] = array_j[j]; 
             array_i[j + 1] = array_i[j]; 
@@ -254,4 +254,102 @@ void transpose(int nthreads, int parallel) {
   if (parallel == 1) {
     insertionSort(); //TODO parallel
   }
+}
+
+// Returns 0 on failure
+int multiply(int nthreads, int parallel) {
+  // Size checking
+  if (ncols != nrows2) {
+    printf("ERROR: Column in 1st does not equals Row in 2nd.\n");
+    return 0;
+  }
+
+  // New matrix on array3 is nrow x ncols2
+  int size = nrows * ncols2;
+  array_i3 = calloc(size, sizeof(int));
+  if (array_i3 == NULL) memError();
+
+  array_j3 = calloc(size, sizeof(int));
+  if (array_j3 == NULL) memError();
+
+  array_val3 = calloc(size, sizeof(int));
+  if (array_val3 == NULL) memError();
+
+  int yr; 
+  int row_top = 0;  // Pointer to the top of array 1
+  int row_bot = 0;  // Pointer to the bottom of array 1
+
+  if (!parallel) {
+    // Loops through each element in the new array
+    for (int i = 0; i < size; i++)
+    {
+      yr = 0;
+      // Changes row pointers when i reaches the end of the coloumn on array 2
+      if (i % ncols2 == 0) {
+        row_bot = row_top;
+        row_top = csr_rows[row_bot+1];
+      }
+      //
+      for (int j = row_bot; j < row_top; j++)
+      {
+        // Iterates through all elements in the 2nd array
+        for (int k = 0; k < nelements2; k++)
+        {
+          // Matches the numbers that are multiplied
+          if (array_j2[k] == i % ncols2 && array_i2[k] == array_j[j]) {
+            //printf("Info: %d, %d, %d, %d\n", array_j2[k], i, array_i2[k], array_j[j]); //Remove
+            yr += array_val[j] * array_val2[k];
+            break;
+          }
+        }
+      }
+
+      array_i3[i] = i / ncols2;
+      array_j3[i] = i % ncols2;
+      array_val3[i] = yr;
+      
+      //row_top = 0;
+      //printf("Info: %d %d %d %d %f\n", i,array_i[i], array_j2[i], yr, array_val[0]);
+    }
+  }
+
+  if (parallel) {
+    // Loops through each element in the new array
+    
+    for (int i = 0; i < size; i++)
+    {
+      yr = 0; //printf("Loops\n");
+      // Changes row pointers when i reaches the end of the coloumn on array 2
+      if (i % ncols2 == 0) {
+        row_bot = row_top;
+        row_top = csr_rows[row_bot+1];
+      }
+      // Loops through the row in the 1st array
+      #pragma omp parallel for reduction(+:yr) num_threads(nthreads)
+      for (int j = row_bot; j < row_top; j++)
+      {
+        // Iterates through all elements in the 2nd array
+        for (int k = 0; k < nelements2; k++)
+        {
+          // Matches the numbers that are multiplied
+          if (array_j2[k] == i % ncols2 && array_i2[k] == array_j[j]) {
+            //printf("Info: %d, %d, %d, %d\n", array_j2[k], i, array_i2[k], array_j[j]); //Remove
+            yr += array_val[j] * array_val2[k];
+            break;
+          }
+        }
+      }
+
+      array_i3[i] = i / ncols2;
+      array_j3[i] = i % ncols2;
+      array_val3[i] = yr;
+      
+      //row_top = 0;
+      //printf("Info: %d %d %d %d %f\n", i,array_i[i], array_j2[i], yr, array_val[0]);
+    }
+  }
+
+  
+  
+  return 1;
 }

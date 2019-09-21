@@ -27,6 +27,8 @@ extern void scalarMultiplication(float, int, int);
 extern float trace(int, int);
 extern void addition(int, int);
 extern void transpose(int, int);
+extern int multiply(int, int);
+extern void freeAll();
 
 // Coordinate formats
 int *array_i;
@@ -53,9 +55,13 @@ int *array_i3;
 int *array_j3;
 int nelements3;
 float *array_val3; 
+int *csr_rows3;
 
 int nrows;
 int ncols;
+
+int nrows2;
+int ncols2;
 
 enum operations{Scalar, Trace, Addition, Transpose, Multiply};
 enum operations op;

@@ -86,7 +86,8 @@ int main(int argc, char *argv[]) {
           //printf("Transpose operation.\n");
         }
         if (argv[i][2] == 'm' && argv[i][3] == 'm') {
-          op = Multiply; strcpy(op_char, "mm");
+          op = Multiply; 
+          isMultiFile = 1; strcpy(op_char, "mm");
           //printf("Mulitplication operation.\n");
         }
         break;
@@ -141,6 +142,7 @@ int main(int argc, char *argv[]) {
   clock_t start_o = clock();
   float trace_sum;
 
+  int m;
   // Scalar multiplication
   switch(op) {
     case (Scalar):
@@ -158,9 +160,14 @@ int main(int argc, char *argv[]) {
       transpose(nthreads, parallel);
       break;
     case (Multiply):
+      m = multiply(nthreads, parallel);
+      if (!m) {
+        freeAll();
+        fclose(file);
+        fclose(file2);
+      }
       break;
   }
-  printf("End of operation\n");
 
   // End time of operation
   clock_t end_o = clock();
@@ -169,18 +176,24 @@ int main(int argc, char *argv[]) {
 
   // Debugging purposes #Remove
   /*
+  printf("%d %f\n", nelements, array_val[0]);
   for (int i = 0; i < nelements; i++)
   {
     if (datatype == 0) {
-      //printf("COO: (%d, %d, %d)\n", array_i[i], array_j[i], (int) array_val[i]);
-      //printf("COO2: (%d, %d, %d)\n", array_i2[i], array_j2[i], (int) array_val2[i]);
-      //printf("CSR1: (%d, %d, %d)\n", (int) array_val[i], csr_rows[i+1], array_j[i]);
-      //printf("CSR2: (%d, %d, %d)\n", (int) array_val2[i], csr_rows2[i+1], array_j2[i]);
+      printf("COO1: (%d, %d, %d)\n", array_i[i], array_j[i], (int) array_val[i]);
+      //printf("CSR1: (%d, %d, %d)\n", csr_rows[i+1], array_j[i], (int) array_val[i]);
     }
     if (datatype == 1) {
       //printf("COO: (%d, %d, %f)\n", array_i[i], array_j[i], array_val[i]);
     }
   }
+  
+  for (int i = 0; i < nelements2; i++)
+  {
+    //printf("COO2: (%d, %d, %d)\n", array_i2[i], array_j2[i], (int) array_val2[i]);
+    printf("CSR2: (%d, %d, %d)\n", (int) array_val2[i], csr_rows2[i+1], array_j2[i]);
+  }
+  
   
   printf("Nelements3: %d\n", nelements3);
   for (int i = 0; i < nelements3; i++)
@@ -203,7 +216,7 @@ int main(int argc, char *argv[]) {
     free(outputfile);
     free(token);
     // Add second file if exists
-    if (op == Addition) {
+    if (op == Addition || op == Multiply) {
       fprintf(fileout, "%s\n", filename2);
     }
 
@@ -314,12 +327,41 @@ int main(int argc, char *argv[]) {
         pos++; coordj++;
       }
     }
-    
+
+    // Multiply output
+    if (op == Multiply) {
+      // Output file function
+      int pos = 0; // Position in the data
+      int coordj = 0; int coordi = 0; // Coordinate to enter data
+      int coo = 0; // Points to the position in COO format
+      int val = nrows * ncols2; // number of values (including zeros)
+      
+      // For loop, enters data to buf
+      while (pos < (val)) {
+        
+        if (coordj != 0 && (coordj % ncols2) == 0) {
+          coordi++;
+          coordj = 0;
+          //fprintf(fileout, "\n"); //Testing purposes TODO: remove
+        }
+        //printf("IF %d == %d && %d == %d\n", coordi, array_i[coo], coordj, array_j[coo]);
+        if (coordi == array_i3[coo] && coordj == array_j3[coo]) {
+          //printf("Add element %d %d, value: %f\n", coordi, coordj, array_val[coo]);
+          fprintf(fileout, "%d ", (int) array_val3[coo]);
+          //fprintf(fileout, "%f ", array_val[coo]); TODO: Change to this
+          coo++;
+        } else {
+          // Add zero
+          fprintf(fileout, "0 ");
+          //fprintf(fileout, "0. "); TODO: Change to this
+        }
+        pos++; coordj++;
+      }
+    }
 
     // File process time & Operation time
     fprintf(fileout, "\n%f\n%f\n", total_p, total_o);
-    
-    
+        
     fclose(fileout);
   }
   printf("Time for file processing: %f\n", total_p);
@@ -340,7 +382,7 @@ int main(int argc, char *argv[]) {
     free(csr_rows2);
   }
 
-  if (op == Addition) {
+  if (op == Addition || op == Multiply) {
     free(array_i3);
     free(array_j3);
     free(array_val3);
