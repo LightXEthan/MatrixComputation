@@ -328,7 +328,7 @@ void transpose(int nthreads, int parallel) {
   }
 
   if (parallel == 1) {
-    printf("Note: transpose does not currently have any parallel functions.")
+    printf("Note: transpose does not currently have any parallel functions.");
     insertionSortp(); //TODO parallel
   }
 }
