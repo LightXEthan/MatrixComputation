@@ -93,8 +93,8 @@ void addition(int nthreads, int parallel) {
       }
       else {
         // values are the same
-        addElement3(array_i[pos1], array_j[pos1], 
-          array_val[pos1] + array_val2[pos2], nelements3);
+        float total = array_val[pos1] + array_val2[pos2];
+        addElement3(array_i[pos1], array_j[pos1], total, nelements3);
         nelements3++;
         pos1++; pos2++;
       }

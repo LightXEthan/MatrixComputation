@@ -240,14 +240,12 @@ int main(int argc, char *argv[]) {
 
       // Enters data to buf
       while (pos < val) {
-        //printf("%d, %d\n", coordi, coordj);
         if (coordj != 0 && (coordj % ncols) == 0) {
           // Move to next row
           coordi++;
           coordj = 0;
         }
         if (coordi == array_i[coo] && coordj == array_j[coo]) {
-          //printf("%f\n", array_val[coo]);
           if (datatype == 0) fprintf(fileout, "%d ", (int) array_val[coo]);
           else {
             
@@ -284,20 +282,18 @@ int main(int argc, char *argv[]) {
       while (pos < val) {
         
         if (coordj != 0 && (coordj % ncols) == 0) {
+          // Move to next row
           coordi++;
           coordj = 0;
-          //fprintf(fileout, "\n"); //Testing purposes TODO: remove
         }
-        //printf("IF %d == %d && %d == %d\n", coordi, array_i[coo], coordj, array_j[coo]);
         if (coordi == array_i3[coo] && coordj == array_j3[coo]) {
-          //printf("Add element %d %d, value: %f\n", coordi, coordj, array_val[coo]);
-          fprintf(fileout, "%d ", (int) array_val3[coo]);
-          //fprintf(fileout, "%f ", array_val[coo]); TODO: Change to this
+          if (!datatype) fprintf(fileout, "%d ", (int) array_val3[coo]);
+          else fprintf(fileout, "%f ", array_val3[coo]);
           coo++;
         } else {
           // Add zero
-          fprintf(fileout, "0 ");
-          //fprintf(fileout, "0. "); TODO: Change to this
+          if (!datatype) fprintf(fileout, "0 ");
+          else fprintf(fileout, "0. ");
         }
         pos++; coordj++;
       }
