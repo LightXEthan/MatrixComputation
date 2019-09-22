@@ -223,9 +223,10 @@ void addition(int nthreads, int parallel) {
 // Sorts the arrays with key of columns instead of rows, they are switched when outputted for simplicity
 void insertionSort() 
 { 
-  int i, j, key, key2, key3; 
+  int i, j, key, key2;
+  float key3; 
   for (i = 1; i < nelements; i++) { 
-      printf("Found: %d\n", (int) array_val[i]);
+      //printf("Found: %d\n", (int) array_val[i]);
       key = array_j[i];    // Col main key
       key2 = array_i[i];   // Row key
       key3 = array_val[i]; // Value key
@@ -234,13 +235,13 @@ void insertionSort()
       /* Move elements to one position ahead 
         of throw_next current position */
       while (j >= 0 && array_j[j] > key) {
-        printf("Moving: %d\n", (int) array_val[j]);
+        //printf("Moving: %d\n", (int) array_val[j]);
         array_j[j + 1] = array_j[j];
         array_i[j + 1] = array_i[j];
         array_val[j + 1] = array_val[j];
         j--;
       }
-      printf("Added: %d\n", (int) array_val[i]);
+      //printf("Added: %d\n", (int) array_val[i]);
       array_j[j + 1] = key;
       array_i[j + 1] = key2;
       array_val[j + 1] = key3;
@@ -248,7 +249,7 @@ void insertionSort()
   return;
 }
 
-void insertionSortp() 
+void insertionSortp(int nthreads) 
 { 
   array_i3 = calloc(nelements, sizeof(int));
   if (array_i3 == NULL) memError();
@@ -262,13 +263,33 @@ void insertionSortp()
   nelements3 = 1;
   array_j3[0] = 0;
 
+  int min_j = INT_MAX;
+  int min_i = INT_MAX;
+  int min_val = INT_MAX;
+  int test[] = {1,2};
+
+  #pragma omp parallel for num_threads(nthreads) reduction(min:min_j,min_i)
+  for (int i = 0; i < nelements; i++)
+  {
+    if (min_j > array_j[i] && min_i > array_i[i]) {
+      
+      min_j = array_j[i];
+      min_i = array_i[i];
+      min_val = array_val[i];
+      printf("x: %d %d\n", min_j, min_i);
+    }
+  }
+  printf("%d,%d\n",test[0],test[1]);
+  printf("MIN: %d %d %d\n", min_j, min_i, min_val);
+  
+
   #pragma omp parallel
   {
     #pragma omp single
     {
       int i, j, key, key2, key3; 
       for (i = 1; i < nelements; i++) {
-        printf("Found: %d\n", (int) array_val[i]);
+        //printf("Found: %d\n", (int) array_val[i]);
         key = array_j[i];    // Col main key
         key2 = array_i[i];   // Row key
         key3 = array_val[i]; // Value key
@@ -281,14 +302,14 @@ void insertionSortp()
         //while (j >= 0 && array_j[j] > key) {
           for (int k = 0; k < nelements3; k++) {
             if (j >= 0 && array_j[j] > key) {
-              printf("Moving: %d\n", (int) array_val[j]);
+              //printf("Moving: %d\n", (int) array_val[j]);
               array_j[j + 1] = array_j[j];
               array_i[j + 1] = array_i[j];
               array_val[j + 1] = array_val[j];
               j--;
             }
           }
-          printf("Added: %d\n", (int) array_val[i]);
+          //printf("Added: %d\n", (int) array_val[i]);
           array_j[j + 1] = key;
           array_i[j + 1] = key2;
           array_val[j + 1] = key3;
@@ -328,8 +349,8 @@ void transpose(int nthreads, int parallel) {
   }
 
   if (parallel == 1) {
-    printf("Note: transpose does not currently have any parallel functions.");
-    insertionSortp(); //TODO parallel
+    printf("Note: transpose does not currently have any parallel functions.\n");
+    insertionSortp(nthreads); //TODO parallel
   }
 }
 

@@ -25,6 +25,9 @@ int main(int argc, char *argv[]) {
   int isMultiFile = 0;      // 1 = true, for operations that require 2 matrix (2 files)
   char op_char[3]; // index of the operation in arguments
   memset(op_char, 0, 3);
+
+  // Clocks
+  clock_t start_p, end_p, start_o, end_o;
   
   int nthreads = 1;
   int parallel = 0;
@@ -96,7 +99,7 @@ int main(int argc, char *argv[]) {
 
   // Time start_ps to convert matrix files
   printf("Starting file processing...\n");
-  clock_t start_p = clock();
+  start_p = clock();
 
   // File data
   FILE *file = fopen(filename, "r");
@@ -139,13 +142,13 @@ int main(int argc, char *argv[]) {
   }
   
   // Gets end_p file process execution
-  clock_t end_p = clock();
+  end_p = clock();
   double total_p = (double) (end_p - start_p) / CLOCKS_PER_SEC;
   printf("File processing complete. Time: %f\n", total_p);
   
   // Times the operation time
   printf("Starting %s matrix operation...\n", op_char);
-  clock_t start_o = clock();
+  start_o = clock();
   float trace_sum;
 
   int m;
@@ -177,7 +180,7 @@ int main(int argc, char *argv[]) {
   }
 
   // End time of operation
-  clock_t end_o = clock();
+  end_o = clock();
   double total_o = (double) (end_o - start_o) / CLOCKS_PER_SEC;
   printf("Matrix operation complete. Time: %f\n", total_o);
 
@@ -248,7 +251,6 @@ int main(int argc, char *argv[]) {
         if (coordi == array_i[coo] && coordj == array_j[coo]) {
           if (datatype == 0) fprintf(fileout, "%d ", (int) array_val[coo]);
           else {
-            
             fprintf(fileout, "%f ", array_val[coo]);
           }
           coo++;
@@ -264,9 +266,9 @@ int main(int argc, char *argv[]) {
     // Trace output
     if (op == Trace) {
       if (!datatype) {
-        fprintf(fileout, "%d\n", (int) trace_sum);
+        fprintf(fileout, "%d", (int) trace_sum);
       } else {
-        fprintf(fileout, "%f\n", trace_sum);
+        fprintf(fileout, "%f", trace_sum);
       }
     }
 
@@ -320,13 +322,13 @@ int main(int argc, char *argv[]) {
         // coordj and coordi are swapped for transposing
         if (coordj == array_i[coo] && coordi == array_j[coo]) {
           //printf("Add element %d %d, value: %f\n", coordj, coordi, array_val[coo]);
-          fprintf(fileout, "%d ", (int) array_val[coo]);
-          //fprintf(fileout, "%f ", array_val[coo]); TODO: Change to this
+          if (!datatype) fprintf(fileout, "%d ", (int) array_val[coo]);
+          else fprintf(fileout, "%f ", array_val[coo]);
           coo++;
         } else {
           // Add zero
-          fprintf(fileout, "0 ");
-          //fprintf(fileout, "0. "); TODO: Change to this
+          if (!datatype) fprintf(fileout, "0 ");
+          else fprintf(fileout, "0. ");
         }
         pos++; coordj++;
       }

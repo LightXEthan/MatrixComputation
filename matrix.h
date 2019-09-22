@@ -12,6 +12,7 @@
 #include <string.h>
 #include <omp.h>
 #include <time.h>
+#include <limits.h>
 
 #define SIZE 14
 
