@@ -68,7 +68,7 @@ void addition(int nthreads, int parallel) {
     array_j3 = calloc(counter, sizeof(int));
     if (array_j3 == NULL) memError();
 
-    array_val3 = calloc(counter, sizeof(float));
+    array_val3 = calloc(counter, sizeof(double));
     if (array_val3 == NULL) memError();
 
     for (int i = 0; i < counter; i++)
@@ -139,7 +139,7 @@ void addition(int nthreads, int parallel) {
     array_j3 = calloc(counter, sizeof(int));
     if (array_j3 == NULL) memError();
 
-    array_val3 = calloc(counter, sizeof(float));
+    array_val3 = calloc(counter, sizeof(double));
     if (array_val3 == NULL) memError();
     
     // Parallel
@@ -257,7 +257,7 @@ void insertionSortp(int nthreads)
   array_j3 = calloc(nelements, sizeof(int));
   if (array_j3 == NULL) memError();
 
-  array_val3 = calloc(nelements, sizeof(float));
+  array_val3 = calloc(nelements, sizeof(double));
   if (array_val3 == NULL) memError();
 
   nelements3 = 1;
@@ -370,10 +370,11 @@ int multiply(int nthreads, int parallel) {
   array_j3 = calloc(size, sizeof(int));
   if (array_j3 == NULL) memError();
 
-  array_val3 = calloc(size, sizeof(float));
+  array_val3 = calloc(size, sizeof(double));
   if (array_val3 == NULL) memError();
 
-  int yr; 
+  double yr;
+  nelements3 = 0;
   int row_top = 0;  // Pointer to the top of array 1
   int row_bot = 0;  // Pointer to the bottom of array 1
 
@@ -381,7 +382,7 @@ int multiply(int nthreads, int parallel) {
     // Loops through each element in the new array
     for (int i = 0; i < size; i++)
     {
-      yr = 0;
+      yr = 0.0;
       // Changes row pointers when i reaches the end of the coloumn on array 2
       if (i % ncols2 == 0) {
         row_bot = row_top;
@@ -395,16 +396,19 @@ int multiply(int nthreads, int parallel) {
         {
           // Matches the numbers that are multiplied
           if (array_j2[k] == i % ncols2 && array_i2[k] == array_j[j]) {
-            //printf("Info: %d, %d, %d, %d\n", array_j2[k], i, array_i2[k], array_j[j]); //Remove
+            //printf("Info: %d, %d, %f, %f\n", array_j2[k], i, array_val[j], array_val2[k]); //Remove
             yr += array_val[j] * array_val2[k];
             break;
           }
         }
       }
-
-      array_i3[i] = i / ncols2;
-      array_j3[i] = i % ncols2;
-      array_val3[i] = yr;
+      // Check if the value is zero, assume percision 52 bit
+      if (yr != 0) {
+        array_i3[nelements3] = i / ncols2;
+        array_j3[nelements3] = i % ncols2;
+        array_val3[nelements3] = yr;
+        nelements3++;
+      }
     }
   }
 
