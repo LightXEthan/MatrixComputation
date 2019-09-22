@@ -25,7 +25,7 @@ void processFile(FILE *file, char *buf, int filenumber) {
   if (filenumber == 0) {
     nrows = atoi(fgets(buf, SIZE, file));
     ncols = atoi(fgets(buf, SIZE, file));
-    //printf("Number of Rows: %d\nNumber of Columns: %d\n", nrows, ncols);
+
     // Checks that the matrix is square
     if (op == Trace && ncols != nrows) {
       printf("Error with Trace: Trying to do trace operation of non square file.\n");
@@ -64,19 +64,19 @@ void processFile(FILE *file, char *buf, int filenumber) {
   int element = 0; // position of element
 
   while (fgets(buf, SIZE, file) != NULL) {
-    //if (filenumber == 1) printf("Buff: [%s]\n", buf); //Remove
+    
     pointer = &buf[0];
     
     while (*pointer != '\0') {
 
-      //if (filenumber == 0) printf("Pointer at: [%c]\n", *pointer); //Remove
+     
       if ((*pointer == ' ' || *pointer == '\n') && elementlen > 0) {
         // Add element to format
         save[elementlen] = '\0';
 
         // Check float zero
         if (atoi(save) > 0) {
-          //if (filenumber == 0) printf("Save: [%s]\n", save); //Remove
+          
           // Adds the element to the arrays
           if (filenumber == 0) {
             addElement(save, element);
@@ -100,9 +100,7 @@ void processFile(FILE *file, char *buf, int filenumber) {
       }
       
       pointer++;
-      //printf("Pointer at: %c\n", *pointer);
     }
-    //printf("Exits\n");
   }
 
   // Check end of file
@@ -186,7 +184,7 @@ void addElement3(int i, int j, float val, int nelements3) {
 
 void addCSR() {
   int dif = 0;
-  //printf("Info1: counter: %d, ncsr: %d, array_i[noo]: %d, array_i[nelements - 1]: %d!\n",csr_counter, ncsr, array_i[nelements], array_i[nelements - 1]);
+  
   if (ncsr > 0) {
     // Calculates number of elements total_p - previous calculation
     dif = csr_counter - csr_rows[ncsr - 1];
@@ -204,7 +202,7 @@ void addCSR() {
 
 void addCSR2() {
   int dif = 0;
-  //printf("Info2: counter: %d, ncsr: %d, array_i[noo]: %d, array_i[nelements - 1]: %d!\n",csr_counter, ncsr, array_i2[nelements2], array_i2[nelements2 - 1]);
+  
   if (ncsr > 0) {
     // Calculates number of elements total_p - previous calculation
     dif = csr_counter - csr_rows2[ncsr - 1];

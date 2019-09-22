@@ -226,7 +226,7 @@ void insertionSort()
   int i, j, key, key2;
   float key3; 
   for (i = 1; i < nelements; i++) { 
-      //printf("Found: %d\n", (int) array_val[i]);
+      
       key = array_j[i];    // Col main key
       key2 = array_i[i];   // Row key
       key3 = array_val[i]; // Value key
@@ -241,7 +241,7 @@ void insertionSort()
         array_val[j + 1] = array_val[j];
         j--;
       }
-      //printf("Added: %d\n", (int) array_val[i]);
+      
       array_j[j + 1] = key;
       array_i[j + 1] = key2;
       array_val[j + 1] = key3;
@@ -249,6 +249,7 @@ void insertionSort()
   return;
 }
 
+/* Work in progress
 void insertionSortp(int nthreads) 
 { 
   array_i3 = calloc(nelements, sizeof(int));
@@ -287,11 +288,11 @@ void insertionSortp(int nthreads)
   // Add all elements with value minj to the array
   for (int i = 0; i < nelements; i++)
   {
-    /* code */
+    
   }
   
   
-
+  
   #pragma omp parallel
   {
     #pragma omp single
@@ -304,8 +305,7 @@ void insertionSortp(int nthreads)
         key3 = array_val[i]; // Value key
         j = i - 1;
 
-        /* Move elements to one position ahead 
-          of throw_next current position */
+        // Move elements to one position ahead of throw_next current position
         //#pragma omp taskwait
         #pragma omp task
         //while (j >= 0 && array_j[j] > key) {
@@ -330,26 +330,7 @@ void insertionSortp(int nthreads)
   
   return;
 }
-
-void swap(int j) {
-  int temp = array_j[j];
-  array_j[j] = array_j[j+1];
-  array_j[j+1] = temp;
-  return;
-}
-
-void bubbleSort() {
-  for (int i = 0; i < nelements; i++)
-  {
-    for (int j = 0; j < nelements-i-1; j++)
-    {
-      if (array_j[j] > array_j[j+1]) {
-        swap(j);
-      }
-    }
-  }
-  return;
-}
+*/
 
 void transpose(int nthreads, int parallel) {
   // row and col and then insertion sort
@@ -359,13 +340,12 @@ void transpose(int nthreads, int parallel) {
 
   if (parallel == 1) {
     printf("Note: transpose does not currently have any parallel functions.\n");
-    insertionSortp(nthreads); //TODO parallel
+    //insertionSortp(nthreads); //TODO parallel
   }
 }
 
 // Returns 0 on failure
 int multiply(int nthreads, int parallel) {
-  
 
   // New matrix on array3 is nrow x ncols2
   int size = nrows * ncols2;
@@ -401,7 +381,6 @@ int multiply(int nthreads, int parallel) {
         {
           // Matches the numbers that are multiplied
           if (array_j2[k] == i % ncols2 && array_i2[k] == array_j[j]) {
-            //printf("Info: %d, %d, %f, %f\n", array_j2[k], i, array_val[j], array_val2[k]); //Remove
             yr += array_val[j] * array_val2[k];
             break;
           }
@@ -422,7 +401,7 @@ int multiply(int nthreads, int parallel) {
     
     for (int i = 0; i < size; i++)
     {
-      yr = 0; //printf("Loops\n");
+      yr = 0;
       // Changes row pointers when i reaches the end of the coloumn on array 2
       if (i % ncols2 == 0) {
         row_bot = row_top;
@@ -437,7 +416,6 @@ int multiply(int nthreads, int parallel) {
         {
           // Matches the numbers that are multiplied
           if (array_j2[k] == i % ncols2 && array_i2[k] == array_j[j]) {
-            //printf("Info: %d, %d, %d, %d\n", array_j2[k], i, array_i2[k], array_j[j]); //Remove
             yr += array_val[j] * array_val2[k];
             break;
           }
