@@ -348,7 +348,7 @@ int main(int argc, char *argv[]) {
         }
         //printf("IF %d == %d && %d == %d\n", coordi, array_i[coo], coordj, array_j[coo]);
         if (coordi == array_i3[coo] && coordj == array_j3[coo]) {
-          //printf("Add element %d %d, value: %f\n", coordi, coordj, array_val[coo]);
+          //printf("Add element %d %d, value: %f\n", coordi, coordj, array_val3[coo]);
           if (!datatype) fprintf(fileout, "%d ", (int) array_val3[coo]);
           else fprintf(fileout, "%f ", array_val3[coo]);
           coo++;

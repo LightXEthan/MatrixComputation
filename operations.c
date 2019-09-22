@@ -402,7 +402,7 @@ int multiply(int nthreads, int parallel) {
           }
         }
       }
-      // Check if the value is zero, assume percision 52 bit
+      // Check if the value is zero, assume percision 52 bit for double
       if (yr != 0) {
         array_i3[nelements3] = i / ncols2;
         array_j3[nelements3] = i % ncols2;
@@ -438,10 +438,13 @@ int multiply(int nthreads, int parallel) {
           }
         }
       }
-
-      array_i3[i] = i / ncols2;
-      array_j3[i] = i % ncols2;
-      array_val3[i] = yr;
+      // Check if the value is zero, assume percision 52 bit for double
+      if (yr != 0) {
+        array_i3[nelements3] = i / ncols2;
+        array_j3[nelements3] = i % ncols2;
+        array_val3[nelements3] = yr;
+        nelements3++;
+      }
     }
   }
   return 1;

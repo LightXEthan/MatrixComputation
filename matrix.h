@@ -55,7 +55,7 @@ int *csr_rows2;
 int *array_i3;
 int *array_j3;
 int nelements3;
-float *array_val3; 
+double *array_val3; 
 int *csr_rows3;
 
 int nrows;
