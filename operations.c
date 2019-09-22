@@ -268,9 +268,11 @@ void insertionSortp(int nthreads)
   int min_val = INT_MAX;
   int test[] = {1,2};
 
-  #pragma omp parallel for num_threads(nthreads) reduction(min:min_j,min_i)
+  // Find the min j value
+  #pragma omp parallel for num_threads(nthreads) reduction(min:min_j)
   for (int i = 0; i < nelements; i++)
   {
+    printf("%d %d %d %d\n", min_j, array_j[i], min_i, array_i[i]);
     if (min_j > array_j[i] && min_i > array_i[i]) {
       
       min_j = array_j[i];
@@ -281,6 +283,13 @@ void insertionSortp(int nthreads)
   }
   printf("%d,%d\n",test[0],test[1]);
   printf("MIN: %d %d %d\n", min_j, min_i, min_val);
+
+  // Add all elements with value minj to the array
+  for (int i = 0; i < nelements; i++)
+  {
+    /* code */
+  }
+  
   
 
   #pragma omp parallel
@@ -356,11 +365,7 @@ void transpose(int nthreads, int parallel) {
 
 // Returns 0 on failure
 int multiply(int nthreads, int parallel) {
-  // Size checking
-  if (ncols != nrows2) {
-    printf("ERROR: Column in 1st does not equals Row in 2nd.\n");
-    return 0;
-  }
+  
 
   // New matrix on array3 is nrow x ncols2
   int size = nrows * ncols2;

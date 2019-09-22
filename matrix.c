@@ -12,11 +12,6 @@ void memError() {
   exit(EXIT_FAILURE);
 }
 
-void TraceError() {
-  perror("Error: Trying to do trace operation of non square file.\n");
-  exit(EXIT_FAILURE);
-}
-
 int main(int argc, char *argv[]) {
 
   char *filename = NULL;
@@ -158,7 +153,6 @@ int main(int argc, char *argv[]) {
       scalarMultiplication(scalar, nthreads, parallel);
       break;
     case (Trace):
-      if (ncols != nrows) TraceError();
       trace_sum = trace(nthreads, parallel);
       //printf("Result of Trace sum: %f\n", trace_sum);
       break;
@@ -225,6 +219,7 @@ int main(int argc, char *argv[]) {
     fprintf(fileout, "%s\n%s\n", op_char, outputfile);
     free(outputfile);
     free(token);
+
     // Add second file if exists
     if (op == Addition || op == Multiply) {
       fprintf(fileout, "%s\n", filename2);
@@ -371,24 +366,11 @@ int main(int argc, char *argv[]) {
   
   // Free all memory allocations
   fclose(file);
-  free(array_i);
-  free(array_j);
-  free(array_val);
-  free(csr_rows);
 
   if (isMultiFile == 1) {
     fclose(file2);
-    free(array_i2);
-    free(array_j2);
-    free(array_val2);
-    free(csr_rows2);
   }
 
-  if (op == Addition || op == Multiply) {
-    free(array_i3);
-    free(array_j3);
-    free(array_val3);
-  }
+  freeAll();
 
-  printf("====== Log end ======\n");
 }
