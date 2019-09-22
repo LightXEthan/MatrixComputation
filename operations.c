@@ -220,30 +220,106 @@ void addition(int nthreads, int parallel) {
   return;
 }
 
-// Sorts the arrays with key of columns instead of rows
+// Sorts the arrays with key of columns instead of rows, they are switched when outputted for simplicity
 void insertionSort() 
 { 
-    int i, j, key, key2, key3; 
-    for (i = 1; i < nelements; i++) { 
-      
-        key = array_j[i]; // Value
-        key2 = array_i[i]; // Second value
-        key3 = array_val[i]; // Third value
-        j = i - 1; 
+  int i, j, key, key2, key3; 
+  for (i = 1; i < nelements; i++) { 
+      printf("Found: %d\n", (int) array_val[i]);
+      key = array_j[i];    // Col main key
+      key2 = array_i[i];   // Row key
+      key3 = array_val[i]; // Value key
+      j = i - 1;
+
+      /* Move elements to one position ahead 
+        of throw_next current position */
+      while (j >= 0 && array_j[j] > key) {
+        printf("Moving: %d\n", (int) array_val[j]);
+        array_j[j + 1] = array_j[j];
+        array_i[j + 1] = array_i[j];
+        array_val[j + 1] = array_val[j];
+        j--;
+      }
+      printf("Added: %d\n", (int) array_val[i]);
+      array_j[j + 1] = key;
+      array_i[j + 1] = key2;
+      array_val[j + 1] = key3;
+  }
+  return;
+}
+
+void insertionSortp() 
+{ 
+  array_i3 = calloc(nelements, sizeof(int));
+  if (array_i3 == NULL) memError();
+
+  array_j3 = calloc(nelements, sizeof(int));
+  if (array_j3 == NULL) memError();
+
+  array_val3 = calloc(nelements, sizeof(float));
+  if (array_val3 == NULL) memError();
+
+  nelements3 = 1;
+  array_j3[0] = 0;
+
+  #pragma omp parallel
+  {
+    #pragma omp single
+    {
+      int i, j, key, key2, key3; 
+      for (i = 1; i < nelements; i++) {
+        printf("Found: %d\n", (int) array_val[i]);
+        key = array_j[i];    // Col main key
+        key2 = array_i[i];   // Row key
+        key3 = array_val[i]; // Value key
+        j = i - 1;
 
         /* Move elements to one position ahead 
           of throw_next current position */
-        while (j >= 0 && array_j[j] > key) { 
-            array_j[j + 1] = array_j[j]; 
-            array_i[j + 1] = array_i[j]; 
-            array_val[j + 1] = array_val[j]; 
-            j--; 
-        } 
-        array_j[j + 1] = key; 
-        array_i[j + 1] = key2; 
-        array_val[j + 1] = key3; 
-    } 
-} 
+        //#pragma omp taskwait
+        #pragma omp task
+        //while (j >= 0 && array_j[j] > key) {
+          for (int k = 0; k < nelements3; k++) {
+            if (j >= 0 && array_j[j] > key) {
+              printf("Moving: %d\n", (int) array_val[j]);
+              array_j[j + 1] = array_j[j];
+              array_i[j + 1] = array_i[j];
+              array_val[j + 1] = array_val[j];
+              j--;
+            }
+          }
+          printf("Added: %d\n", (int) array_val[i]);
+          array_j[j + 1] = key;
+          array_i[j + 1] = key2;
+          array_val[j + 1] = key3;
+          nelements3++;
+        #pragma omp taskwait
+      }
+    }
+  }
+  
+  return;
+}
+
+void swap(int j) {
+  int temp = array_j[j];
+  array_j[j] = array_j[j+1];
+  array_j[j+1] = temp;
+  return;
+}
+
+void bubbleSort() {
+  for (int i = 0; i < nelements; i++)
+  {
+    for (int j = 0; j < nelements-i-1; j++)
+    {
+      if (array_j[j] > array_j[j+1]) {
+        swap(j);
+      }
+    }
+  }
+  return;
+}
 
 void transpose(int nthreads, int parallel) {
   // row and col and then insertion sort
@@ -252,7 +328,8 @@ void transpose(int nthreads, int parallel) {
   }
 
   if (parallel == 1) {
-    insertionSort(); //TODO parallel
+    printf("Note: transpose does not currently have any parallel functions.")
+    insertionSortp(); //TODO parallel
   }
 }
 
@@ -272,7 +349,7 @@ int multiply(int nthreads, int parallel) {
   array_j3 = calloc(size, sizeof(int));
   if (array_j3 == NULL) memError();
 
-  array_val3 = calloc(size, sizeof(int));
+  array_val3 = calloc(size, sizeof(float));
   if (array_val3 == NULL) memError();
 
   int yr; 

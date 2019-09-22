@@ -63,5 +63,6 @@ int ncols;
 int nrows2;
 int ncols2;
 
+int datatype;
 enum operations{Scalar, Trace, Addition, Transpose, Multiply};
 enum operations op;

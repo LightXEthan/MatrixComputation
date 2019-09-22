@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
   {
     if (i != 0 && argv[i][0] != '-') {
       printf("Error: invalid argument: %s\n", argv[i]);
+      exit(EXIT_FAILURE);
     }
     switch (argv[i][1]) {
       case 'f':
@@ -47,6 +48,7 @@ int main(int argc, char *argv[]) {
             //printf("File2: %s\n", filename2);
           } else {
             printf("Error: file not found.\n");
+            exit(EXIT_FAILURE);
           }
           
         }
@@ -58,8 +60,6 @@ int main(int argc, char *argv[]) {
       case 't':
         // Number of threads
         nthreads = atoi(argv[++i]);
-        break;
-      case 'p':
         parallel = 1;
         break;
       case '-':
@@ -69,23 +69,26 @@ int main(int argc, char *argv[]) {
           scalar = atof(argv[++i]);
           //printf("Scalar operation. %d\n", (int) scalar);
         }
-        if (argv[i][2] == 't' && argv[i][3] == 'r') {
+        else if (argv[i][2] == 't' && argv[i][3] == 'r') {
           op = Trace; strcpy(op_char, "tr");
           //printf("Trace operation.\n");
         }
-        if (argv[i][2] == 'a' && argv[i][3] == 'd') {
+        else if (argv[i][2] == 'a' && argv[i][3] == 'd') {
           op = Addition;
           isMultiFile = 1; strcpy(op_char, "ad");
           //printf("Addition operation.\n");
         }
-        if (argv[i][2] == 't' && argv[i][3] == 's') {
+        else if (argv[i][2] == 't' && argv[i][3] == 's') {
           op = Transpose; strcpy(op_char, "ts");
           //printf("Transpose operation.\n");
         }
-        if (argv[i][2] == 'm' && argv[i][3] == 'm') {
+        else if (argv[i][2] == 'm' && argv[i][3] == 'm') {
           op = Multiply; 
           isMultiFile = 1; strcpy(op_char, "mm");
           //printf("Mulitplication operation.\n");
+        } else {
+          printf("Error: invalid argument: %s\n", argv[i]);
+          exit(EXIT_FAILURE);
         }
         break;
     }
@@ -99,9 +102,14 @@ int main(int argc, char *argv[]) {
   FILE *file = fopen(filename, "r");
   FILE *file2;
   char buf[SIZE];
+
+  if (!file) {
+    printf("Error: file not found: %s\n", filename);
+    exit(EXIT_FAILURE);
+  }
   
   char databuf[7];
-  int datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
+  datatype = 0; // Datatype, defualt int = 0, float = 1, -1 for error
 
   nelements = 0;
   csr_counter = 0;
@@ -111,6 +119,10 @@ int main(int argc, char *argv[]) {
   if (isMultiFile == 1) {
     nelements2 = 0;
     file2 = fopen(filename2, "r");
+    if (!file2) {
+      printf("Error: file not found: %s\n", filename2);
+      exit(EXIT_FAILURE);
+    }
   }
 
   // Gets the datatype from the file
@@ -179,7 +191,7 @@ int main(int argc, char *argv[]) {
       //printf("CSR1: (%d, %d, %d)\n", csr_rows[i+1], array_j[i], (int) array_val[i]);
     }
     if (datatype == 1) {
-      //printf("COO: (%d, %d, %f)\n", array_i[i], array_j[i], array_val[i]);
+      printf("COO: (%d, %d, %f)\n", array_i[i], array_j[i], array_val[i]);
     }
   }
   
@@ -226,17 +238,21 @@ int main(int argc, char *argv[]) {
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols; // number of values (including zeros)
 
-      // For loop, enters data to buf
-      while (pos < (val)) {
-        
+      // Enters data to buf
+      while (pos < val) {
+        //printf("%d, %d\n", coordi, coordj);
         if (coordj != 0 && (coordj % ncols) == 0) {
           // Move to next row
           coordi++;
           coordj = 0;
         }
         if (coordi == array_i[coo] && coordj == array_j[coo]) {
+          //printf("%f\n", array_val[coo]);
           if (datatype == 0) fprintf(fileout, "%d ", (int) array_val[coo]);
-          else fprintf(fileout, "%f ", array_val[coo]);
+          else {
+            
+            fprintf(fileout, "%f ", array_val[coo]);
+          }
           coo++;
         } else {
           // Add zero
@@ -264,8 +280,8 @@ int main(int argc, char *argv[]) {
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols; // number of values (including zeros)
       
-      // For loop, enters data to buf
-      while (pos < (val)) {
+      // Enters data to buf
+      while (pos < val) {
         
         if (coordj != 0 && (coordj % ncols) == 0) {
           coordi++;
@@ -295,14 +311,14 @@ int main(int argc, char *argv[]) {
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols; // number of values (including zeros)
 
-      // For loop, enters data to buf
-      while (pos < (val)) {
+      // Enters data to buf
+      while (pos < val) {
         
         if (coordj != 0 && (coordj % ncols) == 0) {
           // Move to next row
           coordi++;
           coordj = 0;
-          //fprintf(fileout, "\n"); //Testing purposes TODO: remove
+          fprintf(fileout, "\n"); //Testing purposes TODO: remove
         }
         //printf("IF %d == %d && %d == %d\n", coordj, array_i[coo], coordi, array_j[coo]);
         // coordj and coordi are swapped for transposing
@@ -328,8 +344,8 @@ int main(int argc, char *argv[]) {
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols2; // number of values (including zeros)
       
-      // For loop, enters data to buf
-      while (pos < (val)) {
+      // Enters data to buf
+      while (pos < val) {
         
         if (coordj != 0 && (coordj % ncols2) == 0) {
           coordi++;

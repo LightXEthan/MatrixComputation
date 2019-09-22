@@ -38,7 +38,7 @@ void processFile(FILE *file, char *buf, int filenumber) {
     }
   }
 
-  char *pointer;         // 
+  char *pointer;         // Points at the character
   char save[SIZE];       // Saves the element
   int elementlen = 0;    // length of the element
 
@@ -58,22 +58,27 @@ void processFile(FILE *file, char *buf, int filenumber) {
     
     while (*pointer != '\0') {
 
-      //if (filenumber == 1) printf("Pointer at: [%c]\n", *pointer); //Remove
+      //if (filenumber == 0) printf("Pointer at: [%c]\n", *pointer); //Remove
       if ((*pointer == ' ' || *pointer == '\n') && elementlen > 0) {
         // Add element to format
         save[elementlen] = '\0';
 
-        //if (filenumber == 1) printf("Save: [%s]\n", save); //Remove
-        // Adds the element to the arrays
-        if (filenumber == 0) {
-          addElement(save, element++);
-        } else {
-          addElement2(save, element++);
+        // Check float zero
+        if (atoi(save) > 0) {
+          //if (filenumber == 0) printf("Save: [%s]\n", save); //Remove
+          // Adds the element to the arrays
+          if (filenumber == 0) {
+            addElement(save, element);
+          } else {
+            addElement2(save, element);
+          }
         }
+        
+        element++;
         elementlen = 0;
       } 
-      else if (*pointer == '0' && elementlen == 0) {
-        // detects if the pointer is at a zero element
+      else if (datatype == 0 && *pointer == '0' && elementlen == 0) {
+        // detects if the pointer is at a zero element int only
         element++;
         pointer++;
         if (*pointer == '\0') break;
