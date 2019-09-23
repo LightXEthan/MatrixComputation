@@ -179,8 +179,6 @@ int main(int argc, char *argv[]) {
 
   // Logs files
   if (logtofile == 1) {
-    char *outputfile = strdup(filename);
-    char *token = strtok(filename, ".\0");
     char fileoutname[PATH_MAX]; 
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
@@ -193,9 +191,7 @@ int main(int argc, char *argv[]) {
     printf("Logging file to: %s\n", fileoutname);
 
     // Add operation and file name
-    fprintf(fileout, "%s\n%s\n", op_char, outputfile);
-    free(outputfile);
-    free(token);
+    fprintf(fileout, "%s\n%s\n", op_char, filename);
 
     // Add second file if exists
     if (op == Addition || op == Multiply) {
