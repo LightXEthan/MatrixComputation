@@ -20,35 +20,7 @@ int getDataType(char *data) {
 }
 
 void processFile(FILE *file, char *buf, int filenumber) {
-
-  // Gets the number of rows and col
-  if (filenumber == 0) {
-    nrows = atoi(fgets(buf, SIZE, file));
-    ncols = atoi(fgets(buf, SIZE, file));
-
-    // Checks that the matrix is square
-    if (op == Trace && ncols != nrows) {
-      printf("Error with Trace: Trying to do trace operation of non square file.\n");
-      exit(EXIT_FAILURE);
-    }
-  }
-  else {
-    // Assuming that the datatype of the two files are the same, so skip reading the datatype of the 2nd matrix
-    fgets(buf, SIZE, file);
-    nrows2 = atoi(fgets(buf, SIZE, file));
-    ncols2 = atoi(fgets(buf, SIZE, file));
-    // Checks that the matrices are equal in size
-    if (op == Addition && nrows != nrows2 && ncols != ncols2) {
-      printf("ERROR with Addition: Matrix Sizes are not the same size of addition.");
-      exit(EXIT_FAILURE);
-    }
-    // Checks that the matricies can be multiplied
-    else if (op == Multiply && ncols != nrows2) {
-      printf("ERROR with Multiply: Column in 1st does not equals Row in 2nd.\n");
-      exit(EXIT_FAILURE);
-    }
-  }
-
+  
   char *pointer;         // Points at the character
   char save[SIZE];       // Saves the element
   int elementlen = 0;    // length of the element
