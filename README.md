@@ -17,7 +17,7 @@ High Performance Computing on Spare Matrices
 * `-l` - Log files will be logged
 
 # Output file
-22248878_2392019_1714_sm.out => (My student ID)_(date)_(time)_(operation).out
+22248878_2392019_1714_sm.out => StudentID_date_time_operation.out
 
 # Example commands
 * `./matrix --sm 2 -l -t 4 -f ./test/int64.in` - Performs Scalar Multiplication, multiplies all values by 2 using 4 threads and logging the output to file
