@@ -143,8 +143,8 @@ int main(int argc, char *argv[]) {
   // Assuming that the datatype of the two files are the same, so skip reading the datatype of the 2nd matrix
   if (isMultiFile) {
     fgets(buf, SIZE, file2);
-    nrows2 = atoi(fgets(buf, SIZE, file));
-    ncols2 = atoi(fgets(buf, SIZE, file));
+    nrows2 = atoi(fgets(buf, SIZE, file2));
+    ncols2 = atoi(fgets(buf, SIZE, file2));
 
     // Checks that the matrices are equal in size
     if (op == Addition && nrows != nrows2 && ncols != ncols2) {
