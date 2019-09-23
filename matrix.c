@@ -119,8 +119,7 @@ int main(int argc, char *argv[]) {
     file2 = fopen(filename2, "r");
     if (!file2) {
       printf("Error: file not found: %s\n", filename2);
-      fclose(file);
-      fclose(file2);
+      fclose(file); fclose(file2);
       exit(EXIT_FAILURE);
     }
   }
@@ -137,27 +136,30 @@ int main(int argc, char *argv[]) {
   // Checks that the matrix is square
   if (op == Trace && ncols != nrows) {
     printf("Error with Trace: Trying to do trace operation of non square file.\n");
-    fclose(file);
+    fclose(file); fclose(file2);
     exit(EXIT_FAILURE);
   }
 
   // Assuming that the datatype of the two files are the same, so skip reading the datatype of the 2nd matrix
-  fgets(buf, SIZE, file2);
-  nrows2 = atoi(fgets(buf, SIZE, file));
-  ncols2 = atoi(fgets(buf, SIZE, file));
+  if (isMultiFile) {
+    fgets(buf, SIZE, file2);
+    nrows2 = atoi(fgets(buf, SIZE, file));
+    ncols2 = atoi(fgets(buf, SIZE, file));
 
-  // Checks that the matrices are equal in size
-  if (op == Addition && nrows != nrows2 && ncols != ncols2) {
-    printf("ERROR with Addition: Matrix Sizes are not the same size of addition.");
-    fclose(file); fclose(file2);
-    exit(EXIT_FAILURE);
+    // Checks that the matrices are equal in size
+    if (op == Addition && nrows != nrows2 && ncols != ncols2) {
+      printf("ERROR with Addition: Matrix Sizes are not the same size of addition.");
+      fclose(file); fclose(file2);
+      exit(EXIT_FAILURE);
+    }
+    // Checks that the matricies can be multiplied
+    else if (op == Multiply && ncols != nrows2) {
+      printf("ERROR with Multiply: Column in 1st does not equals Row in 2nd.\n");
+      fclose(file); fclose(file2);
+      exit(EXIT_FAILURE);
+    }
   }
-  // Checks that the matricies can be multiplied
-  else if (op == Multiply && ncols != nrows2) {
-    printf("ERROR with Multiply: Column in 1st does not equals Row in 2nd.\n");
-    fclose(file); fclose(file2);
-    exit(EXIT_FAILURE);
-  }
+  
   
   // Process the file
   processFile(file, buf, 0);
