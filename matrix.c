@@ -213,6 +213,10 @@ int main(int argc, char *argv[]) {
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols; // number of values (including zeros)
 
+      // Write datatype and dimensions
+      if (!datatype) fprintf(fileout, "int\n%d\n%d\n", nrows, ncols);
+      else fprintf(fileout, "float\n%d\n%d\n", nrows, ncols);
+
       // Enters data to buf
       while (pos < val) {
         if (coordj != 0 && (coordj % ncols) == 0) {
@@ -229,7 +233,7 @@ int main(int argc, char *argv[]) {
         } else {
           // Add zero
           if (datatype == 0) fprintf(fileout, "0 ");
-          else fprintf(fileout, "0.0 ");
+          else fprintf(fileout, "0. ");
         }
         pos++; coordj++;
       }
@@ -251,6 +255,10 @@ int main(int argc, char *argv[]) {
       int coordj = 0; int coordi = 0; // Coordinate to enter data
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols; // number of values (including zeros)
+
+      // Write datatype and dimensions
+      if (!datatype) fprintf(fileout, "int\n%d\n%d\n", nrows, ncols);
+      else fprintf(fileout, "float\n%d\n%d\n", nrows, ncols);
       
       // Enters data to buf
       while (pos < val) {
@@ -281,10 +289,13 @@ int main(int argc, char *argv[]) {
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols; // number of values (including zeros)
 
+      // Write datatype and dimensions
+      if (!datatype) fprintf(fileout, "int\n%d\n%d\n", ncols, nrows);
+      else fprintf(fileout, "float\n%d\n%d\n", ncols, nrows);
+
       // Enters data to buf
       while (pos < val) {
-        
-        if (coordj != 0 && (coordj % ncols) == 0) {
+        if (coordj != 0 && (coordj % nrows) == 0) {
           // Move to next row
           coordi++;
           coordj = 0;
@@ -310,6 +321,9 @@ int main(int argc, char *argv[]) {
       int coordj = 0; int coordi = 0; // Coordinate to enter data
       int coo = 0; // Points to the position in COO format
       int val = nrows * ncols2; // number of values (including zeros)
+
+      if (!datatype) fprintf(fileout, "int\n%d\n%d\n", nrows, ncols2);
+      else fprintf(fileout, "float\n%d\n%d\n", nrows, ncols2);
       
       // Enters data to buf
       while (pos < val) {
@@ -347,5 +361,7 @@ int main(int argc, char *argv[]) {
   }
 
   freeAll();
+
+  exit(EXIT_SUCCESS);
 
 }
