@@ -102,6 +102,7 @@ int main(int argc, char *argv[]) {
 
   if (!file) {
     printf("Error: file not found: %s\n", filename);
+    fclose(file);
     exit(EXIT_FAILURE);
   }
   
@@ -118,6 +119,8 @@ int main(int argc, char *argv[]) {
     file2 = fopen(filename2, "r");
     if (!file2) {
       printf("Error: file not found: %s\n", filename2);
+      fclose(file);
+      fclose(file2);
       exit(EXIT_FAILURE);
     }
   }
