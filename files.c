@@ -40,15 +40,14 @@ void processFile(FILE *file, char *buf, int filenumber) {
     pointer = &buf[0];
     
     while (*pointer != '\0') {
-
+      
      
       if ((*pointer == ' ' || *pointer == '\n') && elementlen > 0) {
         // Add element to format
         save[elementlen] = '\0';
-
+        //printf("[%s]\n", save);
         // Check float zero
-        if (atoi(save) > 0) {
-          
+        if (atof(save) != 0) {
           // Adds the element to the arrays
           if (filenumber == 0) {
             addElement(save, element);
