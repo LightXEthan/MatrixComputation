@@ -1,5 +1,5 @@
 # MatrixComputation
-High Performance Computing on Spare Matrices
+High Performance Computing on Sparse Matrices
 
 # Getting started
 1. `git clone https://github.com/LightXEthan/MatrixComputation`
